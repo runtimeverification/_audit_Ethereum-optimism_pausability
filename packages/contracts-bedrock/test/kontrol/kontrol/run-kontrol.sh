@@ -2,12 +2,7 @@
 
 set -euxo pipefail
 
-export FOUNDRY_PROFILE=kontrol
-
-# Create a log file to store standard out and standard error
-LOG_FILE="run-kontrol-$(date +'%Y-%m-%d-%H-%M-%S').log"
-exec > >(tee -i $LOG_FILE)
-exec 2>&1
+FOUNDRY_PROFILE=kontrol
 
 kontrol_build() {
     kontrol build                     \
@@ -38,7 +33,7 @@ kontrol_prove() {
 # NOTE: This script should be executed from the `contracts-bedrock` directory
 lemmas=test/kontrol/kontrol/pausability-lemmas.k
 base_module=PAUSABILITY-LEMMAS
-module=OptimismPortalTest:${base_module}
+module=CounterTest:${base_module}
 
 rekompile=--rekompile
 rekompile=
@@ -73,7 +68,7 @@ use_booster=--use-booster
 
 # List of tests to symbolically execute
 tests=""
-tests+="--match-test OptimismPortalTest.run "
+tests+="--match-test CounterTest.test_SetNumber "
 
 kontrol_build
 kontrol_prove
