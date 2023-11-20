@@ -7,6 +7,8 @@ module PAUSABILITY-LEMMAS
     imports INFINITE-GAS
     imports INT-SYMBOLIC
 
-// Your lemmas go here
+rule A ==Int B +Int C => A -Int C ==Int B [concrete(A, C), simplification, comm]
+
+rule A ==Int B +Int C => A -Int B ==Int C [concrete(A, B), simplification, comm]
 
 endmodule
