@@ -81,9 +81,7 @@ contract OptimismPortalKontrol is Test, KontrolCheats {
             _outputRootProof3
         );
 
-        optimismPortal = new OptimismPortal();
-
-        vm.prank(address(uint160(kevm.freshUInt(20))));
+        /* vm.prank(address(uint160(kevm.freshUInt(20)))); */
         vm.expectRevert();
         optimismPortal.proveWithdrawalTransaction(
                                                   _tx,

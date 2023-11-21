@@ -5,31 +5,38 @@ set -euxo pipefail
 export FOUNDRY_PROFILE=kontrol
 
 # Create a log file to store standard out and standard error
-LOG_FILE="run-kontrol-$(date +'%Y-%m-%d-%H-%M-%S').log"
+LOG_FILE="test/kontrol/kontrol/logs/kontrol-$(date +'%Y-%m-%d-%H-%M-%S').log"
 exec > >(tee -i $LOG_FILE)
 exec 2>&1
+
+forge_build() {
+  forge build --root . --skip scripts
+}
 
 kontrol_build() {
     kontrol build                     \
             --verbose                 \
+            ${no_forge_build}         \
             --require ${lemmas}       \
             --module-import ${module} \
-            ${rekompile}
+            ${rekompile}              \
+            ${regen}
 }
 
 kontrol_prove() {
     kontrol prove                              \
+            --verbose                          \
             --max-depth ${max_depth}           \
             --max-iterations ${max_iterations} \
             --smt-timeout ${smt_timeout}       \
-            --bmc-depth ${bmc_depth}           \
             --workers ${workers}               \
             ${reinit}                          \
             ${bug_report}                      \
             ${break_on_calls}                  \
             ${auto_abstract}                   \
             ${tests}                           \
-            ${use_booster}
+            ${use_booster}                     \
+            # --bmc-depth ${bmc_depth}
 }
 
 ###
@@ -38,10 +45,15 @@ kontrol_prove() {
 # NOTE: This script should be executed from the `contracts-bedrock` directory
 lemmas=test/kontrol/kontrol/pausability-lemmas.k
 base_module=PAUSABILITY-LEMMAS
-module=CounterTest:${base_module}
+module=OptimismPortalKontrol:${base_module}
 
 rekompile=--rekompile
-rekompile=
+regen=--regen
+# rekompile=
+# regen=
+
+no_forge_build=--no-forge-build
+# no_forge_build=
 
 ###
 # kontrol prove options
@@ -52,12 +64,12 @@ max_iterations=10000
 
 smt_timeout=100000
 
-bmc_depth=10
+# bmc_depth=10
 
 workers=2
 
 reinit=--reinit
-reinit=
+#reinit=
 
 break_on_calls=--no-break-on-calls
 # break_on_calls=
@@ -73,7 +85,9 @@ use_booster=--use-booster
 
 # List of tests to symbolically execute
 tests=""
-tests+="--match-test CounterTest.test_SetNumber "
+# tests+="--match-test OptimismPortalKontrol.test_bytes(uint256):0 "
+tests+="--match-test OptimismPortalKontrol.test_deploy_portal "
 
+forge_build
 kontrol_build
 kontrol_prove
