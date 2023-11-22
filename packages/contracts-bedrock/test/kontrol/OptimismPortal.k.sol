@@ -62,8 +62,8 @@ contract OptimismPortalKontrol is Test, KontrolCheats {
 
     function freshBytes(uint256 bytesLength) internal returns (bytes memory sBytes) {
         SymbolicBytes symbolicBytes = new SymbolicBytes();
-        vm.assume(symbolicBytes.bytesLength() == bytesLength);
         kevm.symbolicStorage(address(symbolicBytes));
+        vm.assume(symbolicBytes.bytesLength() == bytesLength);
         sBytes = symbolicBytes.symbolicBytes();
         /* for (uint256 i = 0; i < bytesLength; i++) { */
         /*     symbolicBytes = abi.encodePacked(freshBytes32(), symbolicBytes); */
