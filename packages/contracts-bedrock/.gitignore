@@ -1,9 +1,11 @@
 # Artifacts and Cache
 artifacts
 forge-artifacts
+kout
 cache
 broadcast
 typechain
+test/kontrol/kontrol/log.out
 
 # Metrics
 coverage.out

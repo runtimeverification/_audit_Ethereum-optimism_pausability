@@ -38,7 +38,7 @@ kontrol_prove() {
 # NOTE: This script should be executed from the `contracts-bedrock` directory
 lemmas=test/kontrol/kontrol/pausability-lemmas.k
 base_module=PAUSABILITY-LEMMAS
-module=CounterTest:${base_module}
+module=OptimismPortalTest:${base_module}
 
 rekompile=--rekompile
 rekompile=
@@ -73,7 +73,7 @@ use_booster=--use-booster
 
 # List of tests to symbolically execute
 tests=""
-tests+="--match-test CounterTest.test_SetNumber "
+tests+="--match-test OptimismPortalTest.test_finalizeWithdrawalTransaction_paused_reverts "
 
 kontrol_build
 kontrol_prove
