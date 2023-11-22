@@ -25,46 +25,39 @@ import { OptimismPortal } from "src/L1/OptimismPortal.sol";
 contract OptimismPortalTest is Test {
     // Reusable default values for a test withdrawal
     Types.WithdrawalTransaction _defaultTx;
+
+    uint256 _proposedOutputIndex;
+    uint256 _proposedBlockNumber;
+    bytes32 _stateRoot;
+    bytes32 _storageRoot;
+    bytes32 _outputRoot;
+    bytes32 _withdrawalHash;
+    bytes[] _withdrawalProof;
+    Types.OutputRootProof internal _outputRootProof;
     L2OutputOracle l2OutputOracle;
     OptimismPortal optimismPortal;
     FFIInterface ffi;
     // Use a constructor to set the storage vars above, so as to minimize the number of ffi calls.
-
     constructor() {
-        ffi = new FFIInterface();
-        // Get the parameters from ./deplpy-config/mainnet.json
-        l2OutputOracle = new L2OutputOracle(1800, 2 ,604800);
-        optimismPortal = new OptimismPortal();
-    }
 
-    /// @dev Setup the system for a ready-to-use state.
-    function setUp() public {
-        // Configure the oracle to return the output root we've prepared.
+        ffi = new FFIInterface();
         address alice = address(128);
         address bob = address(256);
         _defaultTx = Types.WithdrawalTransaction({
-            nonce: 0,
-            sender: alice,
-            target: bob,
-            value: 100,
-            gasLimit: 100_000,
-            data: hex""
+             nonce: 0,
+             sender: alice,
+             target: bob,
+             value: 100,
+             gasLimit: 100_000,
+             data: hex""
         });
-    }
 
-    /// @dev Tests that `proveWithdrawalTransaction` reverts when paused.
-    function runProve() external {
         // Get withdrawal proof data we can use for testing.
-        (
-            bytes32 _stateRoot,
-            bytes32 _storageRoot,
-            bytes32 _outputRoot,
-            bytes32 _withdrawalHash,
-            bytes[] memory _withdrawalProof
-        ) = ffi.getProveWithdrawalTransactionInputs(_defaultTx);
+        (_stateRoot, _storageRoot, _outputRoot, _withdrawalHash, _withdrawalProof) =
+            ffi.getProveWithdrawalTransactionInputs(_defaultTx);
 
         // Setup a dummy output root proof for reuse.
-        Types.OutputRootProof memory _outputRootProof = Types.OutputRootProof({
+        _outputRootProof = Types.OutputRootProof({
             version: bytes32(uint256(0)),
             stateRoot: _stateRoot,
             messagePasserStorageRoot: _storageRoot,
