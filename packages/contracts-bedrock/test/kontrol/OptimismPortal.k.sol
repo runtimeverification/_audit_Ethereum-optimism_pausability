@@ -6,22 +6,16 @@ import {OptimismPortal} from "src/L1/OptimismPortal.sol";
 import { Types } from "src/libraries/Types.sol";
 import {KontrolCheats} from "kontrol-cheatcodes/KontrolCheats.sol";
 
-contract SymbolicBytes {
-    bytes public symbolicBytes;
-
-    function bytesLength() view public returns (uint256) {
-        return symbolicBytes.length;
-    }
+contract SymbolicBytesGhost {
+    bytes public symbolicBytesGhost;
 }
 
 contract OptimismPortalKontrol is Test, KontrolCheats {
 
     OptimismPortal optimismPortal;
-    /* SymbolicBytes symbolicBytes; */
 
     function setUp() public {
         optimismPortal = new OptimismPortal();
-        /* symbolicBytes = new SymbolicBytes(); */
     }
 
     function createWithdrawalTransaction(
@@ -60,15 +54,27 @@ contract OptimismPortalKontrol is Test, KontrolCheats {
         return address(uint160(kevm.freshUInt(20)));
     }
 
-    function freshBytes(uint256 bytesLength) internal returns (bytes memory sBytes) {
-        SymbolicBytes symbolicBytes = new SymbolicBytes();
-        kevm.symbolicStorage(address(symbolicBytes));
-        vm.assume(symbolicBytes.bytesLength() == bytesLength);
-        sBytes = symbolicBytes.symbolicBytes();
-        /* for (uint256 i = 0; i < bytesLength; i++) { */
-        /*     symbolicBytes = abi.encodePacked(freshBytes32(), symbolicBytes); */
-        /* } */
-        /* require(symbolicBytes.length == 32 * bytesLength, "freshBytes unsuccesful"); */
+    /// @dev Creates a fresh bytes with length greater than 31
+    /// @param bytesLength: Length of the fresh bytes. Should be concrete
+    function freshBigBytes(uint256 bytesLength) internal returns (bytes memory sBytes) {
+        require(bytesLength >= 32, "Small bytes");
+
+        uint256 bytesSlotValue;
+        unchecked {
+            bytesSlotValue = bytesLength * 2 + 1;
+        }
+
+        /* Deploy ghost contract */
+        SymbolicBytesGhost symbolicBytesGhost = new SymbolicBytesGhost();
+
+        /* Make the storage of the ghost contract symbolic */
+        kevm.symbolicStorage(address(symbolicBytesGhost));
+
+        /* Load the size encoding into the first slot of symbolicBytesGhost*/
+        vm.store(address(symbolicBytesGhost), bytes32(uint256(0)), bytes32(bytesSlotValue));
+
+        /* vm.assume(symbolicBytesGhost.bytesLength() == bytesLength); */
+        sBytes = symbolicBytesGhost.symbolicBytesGhost();
     }
 
     /// @dev Creates a bounded symbolic bytes[] memory representing a withdrawal proof
@@ -83,7 +89,7 @@ contract OptimismPortalKontrol is Test, KontrolCheats {
         withdrawalProof = new bytes[](arrayLength);
 
         for (uint256 i = 0; i < withdrawalProof.length; ++i) {
-            withdrawalProof[i] = freshBytes(600); // abi.encodePacked(freshBytes32());  // abi.encodePacked(kevm.freshUInt(32));
+            withdrawalProof[i] = freshBigBytes(600); // abi.encodePacked(freshBytes32());  // abi.encodePacked(kevm.freshUInt(32));
         }
     }
 
