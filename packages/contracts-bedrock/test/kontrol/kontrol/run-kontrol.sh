@@ -73,7 +73,7 @@ use_booster=--use-booster
 
 # List of tests to symbolically execute
 tests=""
-tests+="--match-test OptimismPortalTest.test_finalizeWithdrawalTransaction_paused_reverts "
+tests+="--match-test OptimismPortalTest.run "
 
 kontrol_build
 kontrol_prove
