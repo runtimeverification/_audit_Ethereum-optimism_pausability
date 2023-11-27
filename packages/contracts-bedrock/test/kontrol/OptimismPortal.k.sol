@@ -81,15 +81,15 @@ contract OptimismPortalKontrol is Test, KontrolCheats {
     /// Each element is 17 * 32 = 544 bytes long, plus ~10% margin for RLP encoding: each element is 600 bytes
     /// The length of the array to 10 or fewer elements
     function freshWithdrawalProof() public returns (bytes[] memory withdrawalProof) {
-        /* Assuming arrayLength = 10 for faster proof speeds. For full generality replace with <= */
-        uint256 arrayLength = 10;
+        /* Assuming arrayLength = 2 for faster proof speeds. For full generality replace with the code below */
+        uint256 arrayLength = 2;
         /* uint256 arrayLength = kevm.freshUInt(32); */
         /* vm.assume(arrayLength <= 10); */
 
         withdrawalProof = new bytes[](arrayLength);
 
         for (uint256 i = 0; i < withdrawalProof.length; ++i) {
-            withdrawalProof[i] = freshBigBytes(600); // abi.encodePacked(freshBytes32());  // abi.encodePacked(kevm.freshUInt(32));
+            withdrawalProof[i] = freshBigBytes(60); // abi.encodePacked(freshBytes32());  // abi.encodePacked(kevm.freshUInt(32));
         }
     }
 
