@@ -2,14 +2,12 @@
 pragma solidity 0.8.15;
 
 /* import {Test} from "forge-std/Test.sol"; */
-import {Counter} from "src/L1/Counter.sol";
-import {OptimismPortal} from "src/L1/OptimismPortal.sol";
+import { Counter } from "src/L1/Counter.sol";
+import { OptimismPortal } from "src/L1/OptimismPortal.sol";
 
 contract CounterTest {
-
     Counter counter;
     OptimismPortal optimismPortal;
-
 
     function setUp() public {
         counter = new Counter();
