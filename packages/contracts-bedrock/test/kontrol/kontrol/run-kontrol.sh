@@ -86,7 +86,7 @@ use_booster=--use-booster
 # List of tests to symbolically execute
 tests=""
 # tests+="--match-test OptimismPortalKontrol.test_bytes(uint256):0 "
-tests+="--match-test OptimismPortalKontrol.test_deploy_portal "
+tests+="--match-test OptimismPortalKontrol.test_proveWithdrawalTransaction_paused "
 
 forge_build
 kontrol_build
