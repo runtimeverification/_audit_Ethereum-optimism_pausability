@@ -4,6 +4,7 @@ pragma solidity 0.8.15;
 import {OptimismPortal} from "src/L1/OptimismPortal.sol";
 import { Types } from "src/libraries/Types.sol";
 import { KontrolUtils } from "./KontrolUtils.sol";
+import { DeploymentScriptSimplified } from "./OptimismDeployment.sol";
 
 contract OptimismPortalKontrol is KontrolUtils {
 
