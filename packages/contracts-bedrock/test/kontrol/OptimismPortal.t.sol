@@ -1,84 +1,100 @@
-    // SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: MIT
 pragma solidity 0.8.15;
 
 // Testing utilities
-import { stdError, Test } from "forge-std/Test.sol";
-
+import { Test } from "forge-std/Test.sol";
+import { Setup } from "test/setup/Setup.sol";
 import { CommonTest } from "test/setup/CommonTest.sol";
-import { FFIInterface } from "test/setup/FFIInterface.sol";
-import { NextImpl } from "test/mocks/NextImpl.sol";
-import { EIP1967Helper } from "test/mocks/EIP1967Helper.sol";
-
 // Libraries
 import { Types } from "src/libraries/Types.sol";
-import { Hashing } from "src/libraries/Hashing.sol";
-import { Constants } from "src/libraries/Constants.sol";
-
-// Target contract dependencies
-import { Proxy } from "src/universal/Proxy.sol";
-import { ResourceMetering } from "src/L1/ResourceMetering.sol";
-import { AddressAliasHelper } from "src/vendor/AddressAliasHelper.sol";
-import { L2OutputOracle } from "src/L1/L2OutputOracle.sol";
-import { SystemConfig } from "src/L1/SystemConfig.sol";
 import { OptimismPortal } from "src/L1/OptimismPortal.sol";
+import { L2OutputOracle } from "src/L1/L2OutputOracle.sol";
+// Target contract dependencies
+import { KontrolCheats } from "kontrol-cheatcodes/KontrolCheats.sol";
 
-contract OptimismPortalTest is Test {
-    // Reusable default values for a test withdrawal
-    Types.WithdrawalTransaction _defaultTx;
-    L2OutputOracle l2OutputOracle;
-    OptimismPortal optimismPortal;
-    FFIInterface ffi;
+contract SymbolicBytesGhost {
+    bytes public symbolicBytesGhost;
+}
+
+contract OptimismPortalTest is CommonTest, KontrolCheats {
     // Use a constructor to set the storage vars above, so as to minimize the number of ffi calls.
-
-    constructor() {
-        ffi = new FFIInterface();
-        // Get the parameters from ./deplpy-config/mainnet.json
-        l2OutputOracle = new L2OutputOracle(1800, 2 ,604800);
-        optimismPortal = new OptimismPortal();
-    }
+    constructor() { }
 
     /// @dev Setup the system for a ready-to-use state.
-    function setUp() public {
-        // Configure the oracle to return the output root we've prepared.
-        address alice = address(128);
-        address bob = address(256);
-        _defaultTx = Types.WithdrawalTransaction({
-            nonce: 0,
-            sender: alice,
-            target: bob,
-            value: 100,
-            gasLimit: 100_000,
-            data: hex""
-        });
+    function setUp() public override { }
+
+    /// @dev Creates a fresh bytes with length greater than 31
+    /// @param bytesLength: Length of the fresh bytes. Should be concrete
+    function freshBigBytes(uint256 bytesLength) internal returns (bytes memory sBytes) {
+        require(bytesLength >= 32, "Small bytes");
+
+        uint256 bytesSlotValue;
+        unchecked {
+            bytesSlotValue = bytesLength * 2 + 1;
+        }
+
+        /* Deploy ghost contract */
+        SymbolicBytesGhost symbolicBytesGhost = new SymbolicBytesGhost();
+
+        /* Make the storage of the ghost contract symbolic */
+        kevm.symbolicStorage(address(symbolicBytesGhost));
+
+        /* Load the size encoding into the first slot of symbolicBytesGhost*/
+        vm.store(address(symbolicBytesGhost), bytes32(uint256(0)), bytes32(bytesSlotValue));
+
+        /* vm.assume(symbolicBytesGhost.bytesLength() == bytesLength); */
+        sBytes = symbolicBytesGhost.symbolicBytesGhost();
+    }
+
+    function freshWithdrawalProof() public returns (bytes[] memory withdrawalProof) {
+        /* Assuming arrayLength = 10 for faster proof speeds. For full generality replace with <= */
+        uint256 arrayLength = 2;
+        /* uint256 arrayLength = kevm.freshUInt(32); */
+        /* vm.assume(arrayLength <= 10); */
+
+        withdrawalProof = new bytes[](arrayLength);
+
+        for (uint256 i = 0; i < withdrawalProof.length; ++i) {
+            withdrawalProof[i] = freshBigBytes(60); // abi.encodePacked(freshBytes32());  //
+                // abi.encodePacked(kevm.freshUInt(32));
+        }
     }
 
     /// @dev Tests that `proveWithdrawalTransaction` reverts when paused.
-    function runProve() external {
-        // Get withdrawal proof data we can use for testing.
-        (
-            bytes32 _stateRoot,
-            bytes32 _storageRoot,
-            bytes32 _outputRoot,
-            bytes32 _withdrawalHash,
-            bytes[] memory _withdrawalProof
-        ) = ffi.getProveWithdrawalTransactionInputs(_defaultTx);
+    function runProve(
+        address _tx1,
+        address _tx2,
+        uint256 _l2OuputIndex,
+        bytes32 _version,
+        bytes32 _stateRoot,
+        bytes32 _storageRoot,
+        bytes32 _blockHash
+    )
+        external
+    {
+        uint256 _tx0 = kevm.freshUInt(32);
+        uint256 _tx3 = kevm.freshUInt(32);
+        uint256 _tx4 = kevm.freshUInt(32);
+        bytes memory _tx5 = abi.encode(kevm.freshUInt(32));
+
+        bytes[] memory _withdrawalProof = freshWithdrawalProof();
+
+        Types.WithdrawalTransaction memory _tx = Types.WithdrawalTransaction(_tx0, _tx1, _tx2, _tx3, _tx4, _tx5);
 
         // Setup a dummy output root proof for reuse.
         Types.OutputRootProof memory _outputRootProof = Types.OutputRootProof({
-            version: bytes32(uint256(0)),
+            version: _version,
             stateRoot: _stateRoot,
             messagePasserStorageRoot: _storageRoot,
-            latestBlockhash: bytes32(uint256(0))
+            latestBlockhash: _blockHash
         });
 
-        uint256 _proposedOutputIndex = l2OutputOracle.nextOutputIndex();
-
         vm.prank(optimismPortal.GUARDIAN());
-        optimismPortal.pause();
+        superchainConfig.pause("identifier");
         vm.expectRevert("OptimismPortal: paused");
         optimismPortal.proveWithdrawalTransaction({
-            _tx: _defaultTx,
-            _l2OutputIndex: _proposedOutputIndex,
+            _tx: _tx,
+            _l2OutputIndex: _l2OuputIndex,
             _outputRootProof: _outputRootProof,
             _withdrawalProof: _withdrawalProof
         });
@@ -86,10 +102,17 @@ contract OptimismPortalTest is Test {
 
     /// @dev Tests that `finalizeWithdrawalTransaction` reverts if the contract is paused.
     // function test_finalizeWithdrawalTransaction_paused_reverts() external {
-    function runFinalize() external {
+    function runFinalize(address _tx1, address _tx2) external {
+        uint256 _tx0 = kevm.freshUInt(32);
+        uint256 _tx3 = kevm.freshUInt(32);
+        uint256 _tx4 = kevm.freshUInt(32);
+        bytes memory _tx5 = abi.encode(kevm.freshUInt(32));
+
+        Types.WithdrawalTransaction memory _tx = Types.WithdrawalTransaction(_tx0, _tx1, _tx2, _tx3, _tx4, _tx5);
+
         vm.prank(optimismPortal.GUARDIAN());
-        optimismPortal.pause();
+        superchainConfig.pause("identifier");
         vm.expectRevert("OptimismPortal: paused");
-        optimismPortal.finalizeWithdrawalTransaction(_defaultTx);
+        optimismPortal.finalizeWithdrawalTransaction(_tx);
     }
 }
