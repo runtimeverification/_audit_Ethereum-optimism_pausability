@@ -36,7 +36,6 @@ fs_permissions = [
   { access='read', path = './forge-artifacts/' },
   { access='write', path='./semver-lock.json' },
   { access='read-write', path='./.testdata/' },
-  { access='read', path='./kout/'}
 ]
 libs = ["node_modules", "lib"]
 
@@ -80,4 +79,15 @@ remappings = [
   '@cwia/=lib/clones-with-immutable-args/src',
   'forge-std/=lib/forge-std/src',
   'ds-test/=lib/forge-std/lib/ds-test/src'
+]
+fs_permissions = [
+  { access='read-write', path='./.resource-metering.csv' },
+  { access='read-write', path='./snapshots/' },
+  { access='read-write', path='./deployments/' },
+  { access='read', path='./deploy-config/' },
+  { access='read', path='./periphery-deploy-config/' },
+  { access='read', path='./broadcast/' },
+  { access='read', path = './kout/' },
+  { access='write', path='./semver-lock.json' },
+  { access='read-write', path='./.testdata/' },
 ]
