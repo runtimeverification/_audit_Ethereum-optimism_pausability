@@ -102,7 +102,7 @@ contract OptimismPortalTest is CommonTest, KontrolCheats {
 
     /// @dev Tests that `finalizeWithdrawalTransaction` reverts if the contract is paused.
     // function test_finalizeWithdrawalTransaction_paused_reverts() external {
-    function runFinalize(address _tx1, address _tx2) external {
+    function test_finalize(address _tx1, address _tx2) external {
         uint256 _tx0 = kevm.freshUInt(32);
         uint256 _tx3 = kevm.freshUInt(32);
         uint256 _tx4 = kevm.freshUInt(32);

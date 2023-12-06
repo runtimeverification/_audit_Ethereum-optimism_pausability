@@ -13,12 +13,6 @@ contract OptimismPortalTest3 is SetupCheatcode {
     SuperchainConfig superchainConfig;
     OptimismPortal optimismPortal;
 
-    modifier broadcast() {
-        vm.startBroadcast(msg.sender);
-        _;
-        vm.stopBroadcast();
-    }
-
     function setUp() public {
         recreateDeployment();
         superchainConfig = SuperchainConfig(payable(SuperchainConfigProxyAddress));
