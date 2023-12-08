@@ -17,9 +17,7 @@ contract OptimismPortalTest2 is Setup, Test {
         vm.startStateDiffRecording();
         _;
         VmSafe.AccountAccess[] memory accesses = vm.stopAndReturnStateDiff();
-        console.log(
-            "Writing %d state diff account accesses to snapshots/state-diff/%s.json", accesses.length, name()
-        );
+        console.log("Writing %d state diff account accesses to snapshots/state-diff/%s.json", accesses.length, name());
         string memory json = LibStateDiff.encodeAccountAccesses(accesses);
         string memory statediffPath = string.concat(vm.projectRoot(), "/snapshots/state-diff/", name(), ".json");
         vm.writeJson({ json: json, path: statediffPath });

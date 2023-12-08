@@ -22,15 +22,15 @@ contract OptimismPortalTest4 is SetupCheatcode, KontrolCheats {
     }
 
     function test_finalize(address _tx1, address _tx2) external {
-        // uint256 _tx0 = kevm.freshUInt(32);
-        // uint256 _tx3 = kevm.freshUInt(32);
-        // uint256 _tx4 = kevm.freshUInt(32);
-        // bytes memory _tx5 = abi.encode(kevm.freshUInt(32));
+        uint256 _tx0 = kevm.freshUInt(32);
+        uint256 _tx3 = kevm.freshUInt(32);
+        uint256 _tx4 = kevm.freshUInt(32);
+        bytes memory _tx5 = abi.encode(kevm.freshUInt(32));
 
-        // Types.WithdrawalTransaction memory _tx = Types.WithdrawalTransaction(_tx0, _tx1, _tx2, _tx3, _tx4, _tx5);
-        // vm.prank(optimismPortal.GUARDIAN());
-        // superchainConfig.pause("identifier");
-        // vm.expectRevert("OptimismPortal: paused");
-        // optimismPortal.finalizeWithdrawalTransaction(_tx);
+        Types.WithdrawalTransaction memory _tx = Types.WithdrawalTransaction(_tx0, _tx1, _tx2, _tx3, _tx4, _tx5);
+        vm.prank(optimismPortal.GUARDIAN());
+        superchainConfig.pause("identifier");
+        vm.expectRevert("OptimismPortal: paused");
+        optimismPortal.finalizeWithdrawalTransaction(_tx);
     }
 }
