@@ -12,7 +12,7 @@ contract StateDiffTest is StateDiffCheatcode, KontrolUtils {
 
     function setUp() public {
         recreateDeployment();
-        optimismPortal = OptimismPortal(payable(OptimismPortalProxyAddress));
+        /* optimismPortal = OptimismPortal(payable(OptimismPortalProxyAddress)); */
         superchainConfig = SuperchainConfig(SuperchainConfigProxyAddress);
     }
 
@@ -108,6 +108,48 @@ contract StateDiffTest is StateDiffCheatcode, KontrolUtils {
                                                   _outputRootProof,
                                                   _withdrawalProof
         );
+    }
+
+    function testConcrete() public {
+        require(superchainConfig.paused() == false);
+        require(superchainConfig.guardian() == GuardianAddress);
+        vm.prank(GuardianAddress);
+        superchainConfig.pause("Guardian Paused");
+        require(superchainConfig.paused() == true);
+        vm.expectRevert();
+        superchainConfig.pause("Some other paused");
+    }
+
+    function testConcrete1() public {
+        superchainConfig.paused();
+    }
+
+    function testConcrete2() public {
+        vm.load(SuperchainConfigProxyAddress, bytes32(uint256(keccak256("superchainConfig.paused")) - 1));
+    }
+
+    function testFailConcrete3() public {
+        require(superchainConfig.paused() == true);
+    }
+
+    function testConcrete4() public {
+        require(vm.load(SuperchainConfigProxyAddress, bytes32(uint256(keccak256("superchainConfig.paused")) - 1)) == bytes32(uint256(0)));
+    }
+
+    function testConcrete5() public {
+        vm.prank(GuardianAddress);
+        superchainConfig.pause("Guardian Paused");
+    }
+
+    function testConcrete6() public {
+        address recordedAddress;
+        bytes32 slotContents = vm.load(SuperchainConfigProxyAddress, bytes32(uint256(keccak256("superchainConfig.guardian")) - 1));
+        assembly {
+            recordedAddress := slotContents
+        }
+
+        require(recordedAddress == GuardianAddress);
+        require(GuardianAddress != address(0));
     }
 
 }

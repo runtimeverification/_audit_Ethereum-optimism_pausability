@@ -2,7 +2,7 @@
 
 set -euxo pipefail
 
-export FOUNDRY_PROFILE=stategen
+export FOUNDRY_PROFILE=stategen # kontrol # hardcoded
 
 # Create a log file to store standard out and standard error
 LOG_FILE="run-kontrol-$(date +'%Y-%m-%d-%H-%M-%S').log"
@@ -79,8 +79,15 @@ use_booster=--use-booster
 tests=""
 #tests+="--match-test CounterTest.test_SetNumber "
 #tests+="--match-test StateDiffTest.setUp "
-tests+="--match-test StateDiffCheatcode.recreateDeployment "
-# tests+="--match-test StateDiffTest.testVerifyStateChange "
+# tests+="--match-test StateDiffCheatcode.recreateDeployment "
+tests+="--match-test StateDiffTest.testConcrete "
+tests+="--match-test StateDiffTest.testConcrete1 "
+tests+="--match-test StateDiffTest.testConcrete2 "
+tests+="--match-test StateDiffTest.testFailConcrete3 "
+tests+="--match-test StateDiffTest.testConcrete4 "
+tests+="--match-test StateDiffTest.testConcrete5 "
+tests+="--match-test StateDiffTest.testConcrete6 "
+# tests+="--match-test HardcodedDeployment.test_runHarcodedDeployment "
 
 kontrol_build
 kontrol_prove
