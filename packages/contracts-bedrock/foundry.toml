@@ -17,7 +17,8 @@ remappings = [
   '@cwia/=lib/clones-with-immutable-args/src',
   'forge-std/=lib/forge-std/src',
   'ds-test/=lib/forge-std/lib/ds-test/src',
-  'safe-contracts/=lib/safe-contracts/contracts'
+  'safe-contracts/=lib/safe-contracts/contracts',
+  'kontrol-cheatcodes/=lib/kontrol-cheatcodes/src'
 ]
 extra_output = ['devdoc', 'userdoc', 'metadata', 'storageLayout']
 bytecode_hash = 'none'
@@ -36,6 +37,7 @@ fs_permissions = [
   { access='read', path = './forge-artifacts/' },
   { access='write', path='./semver-lock.json' },
   { access='read-write', path='./.testdata/' },
+  { access='read', path='./kout' }
 ]
 libs = ["node_modules", "lib"]
 
