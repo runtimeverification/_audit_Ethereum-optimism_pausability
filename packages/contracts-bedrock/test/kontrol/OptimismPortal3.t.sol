@@ -19,19 +19,24 @@ contract OptimismPortalTest3 is SetupCheatcode {
         optimismPortal = OptimismPortal(payable(OptimismPortalProxyAddress));
     }
 
-    function test_finalize() external {
-        address alice = address(128);
-        address bob = address(256);
-        vm.deal(alice, type(uint64).max);
-        vm.deal(bob, type(uint64).max);
-
+    // function test_finalize(Types.WithdrawalTransaction memory _tx) external{
+    function test_finalize(
+        address alice,
+        address bob,
+        uint256 nonce,
+        uint256 gas,
+        uint256 value,
+        bytes calldata userData
+    )
+        external
+    {
         Types.WithdrawalTransaction memory _tx = Types.WithdrawalTransaction({
-            nonce: 0,
+            nonce: nonce,
             sender: alice,
             target: bob,
-            value: 100,
-            gasLimit: 100_000,
-            data: hex""
+            value: value,
+            gasLimit: gas,
+            data: userData
         });
         vm.prank(optimismPortal.GUARDIAN());
         superchainConfig.pause("identifier");
