@@ -40,12 +40,12 @@ kontrol_prove() {
 # NOTE: This script should be executed from the `contracts-bedrock` directory
 lemmas=test/kontrol/kontrol/pausability-lemmas.k
 base_module=PAUSABILITY-LEMMAS
-module=StateDiffTest:${base_module}
+module=SimpleTest:${base_module}
 
 rekompile=--rekompile
 regen=--regen
-rekompile=
-regen=
+# rekompile=
+# regen=
 
 ###
 # kontrol prove options
@@ -61,7 +61,7 @@ smt_timeout=100000
 workers=1
 
 reinit=--reinit
-reinit=
+#reinit=
 
 break_on_calls=--no-break-on-calls
 # break_on_calls=
@@ -81,7 +81,7 @@ tests=""
 #tests+="--match-test StateDiffTest.setUp "
 # tests+="--match-test StateDiffCheatcode.recreateDeployment "
 # tests+="--match-test StateDiffTest.testVerifyStateChange "
-tests+="--match-test StateDiffTest.test_proveWithdrawalTransaction_paused "
-
+# tests+="--match-test StateDiffTest.test_proveWithdrawalTransaction_paused "
+tests+="--match-test SimpleTest.testSimple "
 kontrol_build
 kontrol_prove
