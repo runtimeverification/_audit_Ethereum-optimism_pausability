@@ -31,7 +31,9 @@ class DeploymentSummary:
 
         for acc_key in list(self.accounts):
             lines.append('\t\t' + self.accounts[acc_key] + ' = ' + acc_key + ';')
-
+        
+        lines.append('\n')
+        
         lines.append('\t\tbytes memory code;')
         lines.append('\t\tbytes32 slot;')
         lines.append('\t\tbytes32 value;')
