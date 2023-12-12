@@ -43,4 +43,14 @@ contract OptimismPortalTest3 is SetupCheatcode {
         vm.expectRevert("OptimismPortal: paused");
         optimismPortal.finalizeWithdrawalTransaction(_tx);
     }
+
+    function test_concrete() external {
+        require(superchainConfig.paused() == false);
+        require(superchainConfig.guardian() == GuardianAddress);
+        vm.prank(GuardianAddress);
+        superchainConfig.pause("Guardian Paused");
+        require(superchainConfig.paused() == true);
+        vm.expectRevert();
+        superchainConfig.pause("Some other paused");
+    }
 }

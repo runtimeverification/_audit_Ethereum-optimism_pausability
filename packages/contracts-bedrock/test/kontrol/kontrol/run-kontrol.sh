@@ -2,7 +2,7 @@
 
 set -euxo pipefail
 
-export FOUNDRY_PROFILE=kontrol
+export FOUNDRY_PROFILE=deploy
 
 # Create a log file to store standard out and standard error
 LOG_FILE="run-kontrol-$(date +'%Y-%m-%d-%H-%M-%S').log"
@@ -46,7 +46,7 @@ rekompile=
 ###
 # kontrol prove options
 ###
-max_depth=10000
+max_depth=10000000
 
 max_iterations=10000
 
@@ -54,7 +54,7 @@ smt_timeout=100000
 
 bmc_depth=10
 
-workers=2
+workers=1
 
 reinit=--reinit
 reinit=
@@ -66,7 +66,7 @@ auto_abstract=--auto-abstract-gas
 # auto_abstract=
 
 bug_report="--bug-report SetupBugReport "
-#bug_report=
+# bug_report=
 
 use_booster=--use-booster
 # use_booster=

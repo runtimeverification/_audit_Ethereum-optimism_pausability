@@ -33,7 +33,7 @@ contract OptimismPortalTest2 is Setup, Test {
         vm.warp(deploy.cfg().l2OutputOracleStartingTimestamp() + 1);
         vm.roll(deploy.cfg().l2OutputOracleStartingBlockNumber() + 1);
         Setup.L1();
-        Setup.L2({ cfg: deploy.cfg() });
+        //Setup.L2({ cfg: deploy.cfg() });
     }
 
     function test_finalize() external {
