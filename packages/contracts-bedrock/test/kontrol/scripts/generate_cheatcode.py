@@ -23,11 +23,14 @@ class DeploymentSummary:
         lines.append(f'contract {self.name} is Test ' + '{')
 
         for acc_key in list(self.accounts):
-            lines.append('\taddress public ' + self.accounts[acc_key] + ' = ' + acc_key + ';')
+            lines.append('\taddress public ' + self.accounts[acc_key] + ';')
 
         lines.append('\n')
 
         lines.append('\tfunction recreateDeployment() public {')
+
+        for acc_key in list(self.accounts):
+            lines.append('\t\t' + self.accounts[acc_key] + ' = ' + acc_key + ';')
 
         lines.append('\t\tbytes memory code;')
         lines.append('\t\tbytes32 slot;')
