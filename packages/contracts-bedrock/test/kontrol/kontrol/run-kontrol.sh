@@ -41,10 +41,10 @@ kontrol_build() {
 kontrol_prove() {
     notif "Kontrol Prove"
     docker_exec kontrol prove                              \
+			--verbose                          \  
                         --max-depth ${max_depth}           \
                         --max-iterations ${max_iterations} \
                         --smt-timeout ${smt_timeout}       \
-                        --bmc-depth ${bmc_depth}           \
                         --workers ${workers}               \
                         ${reinit}                          \
                         ${bug_report}                      \

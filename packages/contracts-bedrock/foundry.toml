@@ -73,9 +73,32 @@ src = 'src/L1'
 out = 'kout'
 test = 'test/kontrol'
 script = 'scripts-kontrol'
+fs_permissions = [
+  { access='read-write', path='./.resource-metering.csv' },
+  { access='read-write', path='./snapshots/' },
+  { access='read-write', path='./deployments/' },
+  { access='read', path='./deploy-config/' },
+  { access='read', path='./periphery-deploy-config/' },
+  { access='read', path='./broadcast/' },
+  { access='read', path = './kout/' },
+  { access='write', path='./semver-lock.json' },
+  { access='read-write', path='./.testdata/' },
+]
 
 [profile.deploy]
 src = 'test/kontrol/deploy'
 out = 'kout-deploy'
 test = 'test/kontrol/deploy'
 script = 'scripts-kontrol'
+
+fs_permissions = [
+  { access='read-write', path='./.resource-metering.csv' },
+  { access='read-write', path='./snapshots/' },
+  { access='read-write', path='./deployments/' },
+  { access='read', path='./deploy-config/' },
+  { access='read', path='./periphery-deploy-config/' },
+  { access='read', path='./broadcast/' },
+  { access='read', path = './kout-deploy/' },
+  { access='write', path='./semver-lock.json' },
+  { access='read-write', path='./.testdata/' },
+]

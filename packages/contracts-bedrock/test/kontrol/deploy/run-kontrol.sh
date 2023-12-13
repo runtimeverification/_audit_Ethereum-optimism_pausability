@@ -19,10 +19,10 @@ kontrol_build() {
 
 kontrol_prove() {
     kontrol prove                              \
+            --verbose                          \
             --max-depth ${max_depth}           \
             --max-iterations ${max_iterations} \
             --smt-timeout ${smt_timeout}       \
-            --bmc-depth ${bmc_depth}           \
             --workers ${workers}               \
             ${reinit}                          \
             ${bug_report}                      \
@@ -48,7 +48,7 @@ rekompile=
 ###
 max_depth=100000000
 
-max_iterations=10000
+max_iterations=10000000
 
 smt_timeout=10000000
 
@@ -74,6 +74,7 @@ use_booster=--use-booster
 # List of tests to symbolically execute
 tests=""
 tests+="--match-test OptimismPortalTest.test_finalize "
+tests+="--match-test OptimismPortalTest.test_prove "
 
 kontrol_build
 kontrol_prove

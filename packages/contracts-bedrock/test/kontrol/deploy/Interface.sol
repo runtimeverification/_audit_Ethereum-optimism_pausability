@@ -6,8 +6,6 @@ import { Types } from "src/libraries/Types.sol";
 interface OptimismPortalInterface {
     function GUARDIAN() external view returns (address);
 
-    function guardian() external view returns (address);
-
     function paused() external view returns (bool paused_);
 
     function proveWithdrawalTransaction(
