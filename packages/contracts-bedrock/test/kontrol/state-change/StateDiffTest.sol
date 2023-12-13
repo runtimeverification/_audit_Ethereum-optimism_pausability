@@ -110,4 +110,14 @@ contract StateDiffTest is StateDiffCheatcode, KontrolUtils {
         );
     }
 
+    function test_finalizeWithdrawalTransaction_paused_reverts(address _tx1, address _tx2, uint256 _tx0, uint256 _tx3, uint256 _tx4) external {
+        bytes memory _tx5 = hex"";
+
+        Types.WithdrawalTransaction memory _tx = Types.WithdrawalTransaction(_tx0, _tx1, _tx2, _tx3, _tx4, _tx5);
+        vm.prank(optimismPortal.GUARDIAN());
+        superchainConfig.pause("identifier");
+        vm.expectRevert("OptimismPortal: paused");
+        optimismPortal.finalizeWithdrawalTransaction(_tx);
+    }
+
 }

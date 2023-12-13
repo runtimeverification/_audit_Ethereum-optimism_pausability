@@ -82,6 +82,7 @@ tests=""
 # tests+="--match-test StateDiffCheatcode.recreateDeployment "
 # tests+="--match-test StateDiffTest.testVerifyStateChange "
 tests+="--match-test StateDiffTest.test_proveWithdrawalTransaction_paused "
+tests+="--match-test StateDiffTest.test_finalizeWithdrawalTransaction_paused_reverts "
 
 kontrol_build
 kontrol_prove
