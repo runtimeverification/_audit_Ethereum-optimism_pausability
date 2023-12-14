@@ -27,11 +27,6 @@ contract DeployCheatcode is Test {
     address internal constant SystemConfigAddress = 0x886D6d1eB8D415b00052828CD6d5B321f072073d;
     address internal constant SystemConfigProxyAddress = 0x13aa49bAc059d709dd0a18D6bb63290076a702D7;
     address internal constant SystemOwnerSafeAddress = 0xB7862B55c83a9e5a754fC6a35A9C2b0908e34FE9;
-    address internal constant acc24 = 0x7109709ECfa91a80626fF3989D68f67F5b1DD12D;
-    address internal constant acc25 = 0xa6B71E26C5e0845f74c812102Ca7114b6a896AB2;
-    address internal constant acc26 = 0xd9Db270c1B5E3Bd161E8c8503c55cEABeE709552;
-    address internal constant acc27 = 0x104fBc016F4bb334D775a19E8A6510109AC63E00;
-    address internal constant acc28 = 0x9965507D1a55bcC2695C58ba16FB37d819B0A4dc;
 
     function recreateDeployment() public {
         bytes memory code;

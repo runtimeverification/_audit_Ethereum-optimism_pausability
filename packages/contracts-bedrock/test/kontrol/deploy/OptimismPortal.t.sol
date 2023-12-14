@@ -6,7 +6,8 @@ import { Types } from "src/libraries/Types.sol";
 import { KontrolUtils } from "../KontrolUtils.sol";
 import { DeployCheatcode } from "../DeployCheatcode.sol";
 import {
-    SuperchainConfigInterface as SuperchainConfig, OptimismPortalInterface as OptimismPortal
+    SuperchainConfigInterface as SuperchainConfig,
+    OptimismPortalInterface as OptimismPortal
 } from "./Interface.sol";
 
 contract OptimismPortalTest is DeployCheatcode, KontrolUtils {
@@ -19,7 +20,7 @@ contract OptimismPortalTest is DeployCheatcode, KontrolUtils {
         optimismPortal = OptimismPortal(payable(OptimismPortalProxyAddress));
     }
 
-    function test_prove(
+    function test_proveWithdrawalTransaction(
         address _tx1,
         address _tx2,
         uint256 _l2OutputIndex,
@@ -58,7 +59,15 @@ contract OptimismPortalTest is DeployCheatcode, KontrolUtils {
         optimismPortal.proveWithdrawalTransaction(_tx, _l2OutputIndex, _outputRootProof, _withdrawalProof);
     }
 
-    function test_finalize(address _tx1, address _tx2, uint256 _tx0, uint256 _tx3, uint256 _tx4) external {
+    function test_finalizeWithdrawalTransaction(
+        address _tx1,
+        address _tx2,
+        uint256 _tx0,
+        uint256 _tx3,
+        uint256 _tx4
+    )
+        external
+    {
         bytes memory _tx5 = hex"";
 
         Types.WithdrawalTransaction memory _tx = Types.WithdrawalTransaction(_tx0, _tx1, _tx2, _tx3, _tx4, _tx5);

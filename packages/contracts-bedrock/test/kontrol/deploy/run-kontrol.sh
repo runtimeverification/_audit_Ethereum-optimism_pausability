@@ -13,7 +13,7 @@ kontrol_build() {
     kontrol build                     \
             --verbose                 \
             --require ${lemmas}       \
-            --module-import ${module} \
+            ${module}                 \
             ${rekompile}
 }
 
@@ -38,7 +38,9 @@ kontrol_prove() {
 # NOTE: This script should be executed from the `contracts-bedrock` directory
 lemmas=test/kontrol/kontrol/pausability-lemmas.k
 base_module=PAUSABILITY-LEMMAS
-module=OptimismPortalTest:${base_module}
+module=""
+module+="--module-import OptimismPortalTest:${base_module} "
+module+="--module-import L1CrossDomainMessengerTest:${base_module} "
 
 rekompile=--rekompile
 rekompile=
@@ -73,8 +75,9 @@ use_booster=--use-booster
 
 # List of tests to symbolically execute
 tests=""
-tests+="--match-test OptimismPortalTest.test_finalize "
-tests+="--match-test OptimismPortalTest.test_prove "
+tests+="--match-test OptimismPortalTest.test_finalizeWithdrawalTransaction "
+tests+="--match-test OptimismPortalTest.test_proveWithdrawalTransaction "
+tests+="--match-test L1CrossDomainMessengerTest.test_relayMessage "
 
 kontrol_build
 kontrol_prove
