@@ -24,7 +24,8 @@ contract OptimismDeploy is Deploy {
         deploySafe();
         setupSuperchain();
 
-        // all proxies need to be deplpoyed as the proxies addresses are accessed when initializing each implementation (below);
+        // all proxies need to be deplpoyed as the proxies addresses are accessed when initializing each implementation
+        // (below);
         deployProxies();
 
         /* deployImplementations(); */
