@@ -12,11 +12,11 @@ contract OptimismPortalKontrol is DeploymentSummary, KontrolUtils {
     OptimismPortal optimismPortal;
     SuperchainConfig superchainConfig;
 
-    /* function setUp() public { */
-    /*     recreateDeployment(); */
-    /*     optimismPortal = OptimismPortal(payable(OptimismPortalProxyAddress)); */
-    /*     superchainConfig = SuperchainConfig(SuperchainConfigProxyAddress); */
-    /* } */
+    function setUp() public {
+        /* recreateDeployment(); */
+        optimismPortal = OptimismPortal(payable(address(0)));
+        /* superchainConfig = SuperchainConfig(SuperchainConfigProxyAddress); */
+    }
 
     function test_kontrol_in_foundry(
         bytes[] memory _withdrawalProof,
@@ -122,8 +122,8 @@ contract OptimismPortalKontrol is DeploymentSummary, KontrolUtils {
         bytes32 _outputRootProof1,
         bytes32 _outputRootProof2,
         bytes32 _outputRootProof3
-    )
         /* bytes[] calldata _withdrawalProof */
+    )
         external
     {
         bytes memory _tx5 = freshBigBytes(320);
