@@ -72,7 +72,7 @@ optimizer = false
 src = 'kontrol/src'
 out = 'kontrol/kout'
 test = 'kontrol/test'
-script = 'kontrol/scripts'
+script = 'kontrol/script'
 fs_permissions = [
   { access='read-write', path='./.resource-metering.csv' },
   { access='read-write', path='./snapshots/' },
