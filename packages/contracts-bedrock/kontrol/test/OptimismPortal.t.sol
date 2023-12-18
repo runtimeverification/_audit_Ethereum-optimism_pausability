@@ -3,14 +3,13 @@ pragma solidity 0.8.15;
 
 // Libraries
 import { Types } from "src/libraries/Types.sol";
-import { KontrolUtils } from "../KontrolUtils.sol";
-import { DeployCheatcode } from "../DeployCheatcode.sol";
-import {
-    SuperchainConfigInterface as SuperchainConfig,
-    OptimismPortalInterface as OptimismPortal
-} from "./Interface.sol";
+import { SuperchainConfig } from "src/L1/SuperchainConfig.sol";
+import { OptimismPortal } from "src/L1/OptimismPortal.sol";
 
-contract OptimismPortalTest is DeployCheatcode, KontrolUtils {
+import { KontrolUtils } from "kontrol/src/KontrolUtils.sol";
+import { DeploymentSummary } from "kontrol/src/DeploymentSummary.sol";
+
+contract OptimismPortalTest is DeploymentSummary, KontrolUtils {
     SuperchainConfig superchainConfig;
     OptimismPortal optimismPortal;
 

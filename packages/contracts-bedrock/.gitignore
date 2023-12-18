@@ -3,10 +3,6 @@ artifacts
 forge-artifacts
 cache
 broadcast
-kout
-kout-deploy
-test/kontrol/kontrol/logs
-
 # Metrics
 coverage.out
 .resource-metering.csv

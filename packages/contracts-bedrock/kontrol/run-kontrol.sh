@@ -2,12 +2,28 @@
 
 set -euxo pipefail
 
-export FOUNDRY_PROFILE=deploy
+export FOUNDRY_PROFILE=kontrol
 
 # Create a log file to store standard out and standard error
 LOG_FILE="run-kontrol-$(date +'%Y-%m-%d-%H-%M-%S').log"
 exec > >(tee -i $LOG_FILE)
 exec 2>&1
+
+kontrol_generateCheatcode() {
+    STATEDIFF=snapshots/state-diff/Deploy.json
+    mkdir -p snapshots/state-diff
+    HARDHAT=deployments/hardhat/.deploy
+    CONTRACT_NAMES=$HARDHAT-reversed
+    # This command updates the file deployments/hardhat/.deploy and snapshots/state-diff/Deploy.json
+    forge script --target-contract OptimismDeploy --sig 'deployL1()' kontrol/scripts/OptimismDeploy.s.sol --skip test
+    python3 kontrol/utils/clean_json.py $STATEDIFF
+    cat $STATEDIFF | jq '.' > .diff-tmp.json
+    mv .diff-tmp.json $STATEDIFF
+    python3 kontrol/utils/reverse_key_value.py  $HARDHAT $CONTRACT_NAMES
+    kontrol summary DeploymentSummary $STATEDIFF --contract-names $CONTRACT_NAMES --output-dir kontrol/src
+    forge test --match-contract OptimismDeployTest --match-test "test_" -vvv
+    rm -rf snapshots/state-diff
+}
 
 kontrol_build() {
     kontrol build                     \
@@ -36,7 +52,7 @@ kontrol_prove() {
 # kontrol build options
 ###
 # NOTE: This script should be executed from the `contracts-bedrock` directory
-lemmas=test/kontrol/kontrol/pausability-lemmas.k
+lemmas=kontrol/lemmas/pausability-lemmas.k
 base_module=PAUSABILITY-LEMMAS
 module=""
 module+="--module-import OptimismPortalTest:${base_module} "
@@ -79,5 +95,6 @@ tests+="--match-test OptimismPortalTest.test_finalizeWithdrawalTransaction "
 tests+="--match-test OptimismPortalTest.test_proveWithdrawalTransaction "
 tests+="--match-test L1CrossDomainMessengerTest.test_relayMessage "
 
+kontrol_generateCheatcode
 kontrol_build
 kontrol_prove

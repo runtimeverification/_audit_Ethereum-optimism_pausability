@@ -3,15 +3,15 @@ pragma solidity 0.8.15;
 
 // Libraries
 import { Types } from "src/libraries/Types.sol";
-
-import { DeployCheatcode } from "test/kontrol/DeployCheatcode.sol";
 import { SuperchainConfig } from "src/L1/SuperchainConfig.sol";
 import { OptimismPortal } from "src/L1/OptimismPortal.sol";
 import { L2OutputOracle } from "src/L1/L2OutputOracle.sol";
 import { L1CrossDomainMessenger } from "src/L1/L1CrossDomainMessenger.sol";
 import { Encoding } from "src/libraries/Encoding.sol";
 
-contract OptimismDeployCheatcodeTest is DeployCheatcode {
+import { DeploymentSummary } from "kontrol/src/DeploymentSummary.sol";
+
+contract OptimismDeployTest is DeploymentSummary {
     SuperchainConfig superchainConfig;
     OptimismPortal optimismPortal;
     L1CrossDomainMessenger l1CrossDomainMessenger;
