@@ -15,7 +15,7 @@ kontrol_generateCheatcode() {
     HARDHAT=deployments/hardhat/.deploy
     CONTRACT_NAMES=$HARDHAT-reversed
     # This command updates the file deployments/hardhat/.deploy and snapshots/state-diff/Deploy.json
-    forge script --target-contract OptimismDeploy --sig 'deployL1()' kontrol/script/OptimismDeploy.s.sol --skip test
+    forge script --target-contract OptimismDeploy --sig 'runKontrolDeployment()' kontrol/script/OptimismDeploy.s.sol --skip test
     python3 kontrol/utils/clean_json.py $STATEDIFF
     python3 kontrol/utils/reverse_key_value.py  $HARDHAT $CONTRACT_NAMES
     kontrol summary DeploymentSummary $STATEDIFF --contract-names $CONTRACT_NAMES --output-dir kontrol/src
