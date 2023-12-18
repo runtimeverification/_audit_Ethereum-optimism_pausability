@@ -12,11 +12,11 @@ contract OptimismPortalKontrol is DeploymentSummary, KontrolUtils {
     OptimismPortal optimismPortal;
     SuperchainConfig superchainConfig;
 
-    function setUp() public {
-        recreateDeployment();
-        optimismPortal = OptimismPortal(payable(OptimismPortalProxyAddress));
-        superchainConfig = SuperchainConfig(SuperchainConfigProxyAddress);
-    }
+    /* function setUp() public { */
+    /*     recreateDeployment(); */
+    /*     optimismPortal = OptimismPortal(payable(OptimismPortalProxyAddress)); */
+    /*     superchainConfig = SuperchainConfig(SuperchainConfigProxyAddress); */
+    /* } */
 
     function test_kontrol_in_foundry(
         bytes[] memory _withdrawalProof,
