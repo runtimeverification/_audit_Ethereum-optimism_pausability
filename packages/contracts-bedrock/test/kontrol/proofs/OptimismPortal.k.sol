@@ -1,5 +1,6 @@
 pragma solidity ^0.8.13;
 
+import { Vm } from "forge-std/Vm.sol";
 import { DeploymentSummary } from "./utils/DeploymentSummary.sol";
 import { KontrolUtils } from "./utils/KontrolUtils.sol";
 import { Types } from "src/libraries/Types.sol";
@@ -8,15 +9,18 @@ import {
     SuperchainConfigInterface as SuperchainConfig
 } from "./interfaces/KontrolInterfaces.sol";
 
-contract OptimismPortalKontrol is DeploymentSummary, KontrolUtils {
+contract OptimismPortalKontrol is /* DeploymentSummary, */ KontrolUtils {
+
+    address private constant VM_ADDRESS = address(uint160(uint256(keccak256("hevm cheat code"))));
+    Vm private constant vm = Vm(VM_ADDRESS);
     OptimismPortal optimismPortal;
     SuperchainConfig superchainConfig;
 
-    function setUp() public {
-        /* recreateDeployment(); */
-        optimismPortal = OptimismPortal(payable(address(0)));
-        /* superchainConfig = SuperchainConfig(SuperchainConfigProxyAddress); */
-    }
+    /* function setUp() public { */
+    /*     recreateDeployment(); */
+    /*     optimismPortal = OptimismPortal(payable(address(0))); */
+    /*     superchainConfig = SuperchainConfig(SuperchainConfigProxyAddress); */
+    /* } */
 
     function test_kontrol_in_foundry(
         bytes[] memory _withdrawalProof,
@@ -126,6 +130,7 @@ contract OptimismPortalKontrol is DeploymentSummary, KontrolUtils {
     )
         external
     {
+        optimismPortal = OptimismPortal(payable(address(0)));
         bytes memory _tx5 = freshBigBytes(320);
 
         bytes[] memory _withdrawalProof = freshWithdrawalProof();
