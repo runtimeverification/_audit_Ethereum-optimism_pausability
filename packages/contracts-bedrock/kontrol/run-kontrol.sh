@@ -17,8 +17,6 @@ kontrol_generateCheatcode() {
     # This command updates the file deployments/hardhat/.deploy and snapshots/state-diff/Deploy.json
     forge script --target-contract OptimismDeploy --sig 'deployL1()' kontrol/scripts/OptimismDeploy.s.sol --skip test
     python3 kontrol/utils/clean_json.py $STATEDIFF
-    cat $STATEDIFF | jq '.' > .diff-tmp.json
-    mv .diff-tmp.json $STATEDIFF
     python3 kontrol/utils/reverse_key_value.py  $HARDHAT $CONTRACT_NAMES
     kontrol summary DeploymentSummary $STATEDIFF --contract-names $CONTRACT_NAMES --output-dir kontrol/src
     forge test --match-contract OptimismDeployTest --match-test "test_" -vvv
