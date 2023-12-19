@@ -21,7 +21,6 @@ kontrol_build() {
 kontrol_prove() {
     kontrol prove                              \
             --verbose                          \
-            --debug \
             --max-depth ${max_depth}           \
             --max-iterations ${max_iterations} \
             --smt-timeout ${smt_timeout}       \
