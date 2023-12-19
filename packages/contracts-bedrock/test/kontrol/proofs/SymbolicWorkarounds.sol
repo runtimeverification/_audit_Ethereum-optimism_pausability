@@ -4,7 +4,7 @@ pragma solidity 0.8.15;
 import { Vm } from "forge-std/Vm.sol";
 import { KontrolCheats } from "kontrol-cheatcodes/KontrolCheats.sol";
 
-contract GhostBytes10 {
+contract GhostBytesArray10 {
     bytes public ghostBytes0;
     bytes public ghostBytes1;
     bytes public ghostBytes2;
@@ -42,7 +42,7 @@ contract Workarounds is KontrolCheats {
         /* bytes[] memory bytesArray = new bytes[](arrayLength); */
 
         /* Deploy ghost contract */
-        GhostBytes10 ghostBytes10 = new GhostBytes10();
+        GhostBytesArray10 ghostBytes10 = new GhostBytesArray10();
 
         /* Make the storage of the ghost contract symbolic */
         kevm.symbolicStorage(address(ghostBytes10));
