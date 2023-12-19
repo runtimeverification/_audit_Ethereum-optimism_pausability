@@ -55,7 +55,7 @@ regen=--regen
 max_depth=10000000
 max_iterations=10000000
 smt_timeout=100000
-workers=1
+workers=3
 reinit=--reinit
 # reinit=
 break_on_calls=--no-break-on-calls
@@ -73,7 +73,9 @@ use_booster=--use-booster
 tests=""
 # tests+="--match-test OptimismPortalKontrol.test_proveWithdrawalTransaction_calldata "
 # tests+="--match-test OptimismPortalKontrol.test_finalizeWithdrawalTransaction_paused "
-tests+="--match-test Workarounds.test_workaround "
+tests+="--match-test Workarounds.test_workaround1 "
+tests+="--match-test Workarounds.test_workaround2 "
+tests+="--match-test Workarounds.test_workaround3 "
 
 kontrol_build
 kontrol_prove

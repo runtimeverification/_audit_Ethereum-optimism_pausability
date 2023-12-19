@@ -4,6 +4,10 @@ pragma solidity 0.8.15;
 import { Vm } from "forge-std/Vm.sol";
 import { KontrolCheats } from "kontrol-cheatcodes/KontrolCheats.sol";
 
+contract GhostBytes1 {
+    bytes public ghostBytes;
+}
+
 contract GhostBytesArray10 {
     bytes public ghostBytes0;
     bytes public ghostBytes1;
@@ -35,6 +39,26 @@ contract Workarounds is KontrolCheats {
     address private constant VM_ADDRESS = address(uint160(uint256(keccak256("hevm cheat code"))));
     Vm private constant vm = Vm(VM_ADDRESS);
 
+    function freshBigBytes(uint256 bytesLength) internal returns (bytes memory sBytes) {
+        require(bytesLength >= 32, "Small bytes");
+
+        uint256 bytesSlotValue;
+        unchecked {
+            bytesSlotValue = bytesLength * 2 + 1;
+        }
+
+        /* Deploy ghost contract */
+        GhostBytes1 ghostBytes = new GhostBytes1();
+
+        /* Make the storage of the ghost contract symbolic */
+        kevm.symbolicStorage(address(ghostBytes));
+
+        /* Load the size encoding into the first slot of ghostBytes*/
+        vm.store(address(ghostBytes), bytes32(uint256(0)), bytes32(bytesSlotValue));
+
+        sBytes = ghostBytes.ghostBytes();
+    }
+
     function freshBytesArray() public returns (bytes[] memory) {
         /* Length of the returned bytes array */
         /* uint256 arrayLength = 10; */
@@ -65,9 +89,23 @@ contract Workarounds is KontrolCheats {
         return ghostBytes10.getGhostBytesArray();
     }
 
-    function test_workaround() public {
+    function test_workaround1() public {
         bytes[] memory symbolicBytes = freshBytesArray();
         require(symbolicBytes.length == 10, "Length should be 10");
+    }
+
+    function test_workaround2() public {
+        bytes[] memory symbolicBytes = new bytes[](10);
+
+        for (uint256 i = 0; i < symbolicBytes.length; ++i) {
+            symbolicBytes[i] = freshBigBytes(600);
+        }
+        require(symbolicBytes.length == 10, "Length should be 10");
+    }
+
+    function test_workaround3() public {
+        bytes[] memory symbolicBytes = new bytes[](1);
+        symbolicBytes[0] = freshBigBytes(600);
     }
 
 }
