@@ -21,6 +21,7 @@ kontrol_build() {
 kontrol_prove() {
     kontrol prove                              \
             --verbose                          \
+            --debug \
             --max-depth ${max_depth}           \
             --max-iterations ${max_iterations} \
             --smt-timeout ${smt_timeout}       \
@@ -42,12 +43,12 @@ kontrol_prove() {
 # empty assignment to activate/deactivate the corresponding flag
 lemmas=test/kontrol/kontrol/pausability-lemmas.k
 base_module=PAUSABILITY-LEMMAS
-module=OptimismPortalKontrol:${base_module}
+module=Workarounds:${base_module}
 
 rekompile=--rekompile
 regen=--regen
-rekompile=
-regen=
+# rekompile=
+# regen=
 
 #########################
 # kontrol prove options #
@@ -57,7 +58,7 @@ max_iterations=10000000
 smt_timeout=100000
 workers=1
 reinit=--reinit
-reinit=
+# reinit=
 break_on_calls=--no-break-on-calls
 # break_on_calls=
 auto_abstract=--auto-abstract-gas
@@ -71,8 +72,9 @@ use_booster=--use-booster
 # List of tests to symbolically execute #
 #########################################
 tests=""
-tests+="--match-test OptimismPortalKontrol.test_proveWithdrawalTransaction_paused "
-tests+="--match-test OptimismPortalKontrol.test_finalizeWithdrawalTransaction_paused "
+# tests+="--match-test OptimismPortalKontrol.test_proveWithdrawalTransaction_calldata "
+# tests+="--match-test OptimismPortalKontrol.test_finalizeWithdrawalTransaction_paused "
+tests+="--match-test Workarounds.test_workaround "
 
 kontrol_build
 kontrol_prove
