@@ -5,17 +5,20 @@ import { KontrolUtils } from "./utils/KontrolUtils.sol";
 import { Types } from "src/libraries/Types.sol";
 import {
     IOptimismPortal as OptimismPortal,
-    ISuperchainConfig as SuperchainConfig
+    ISuperchainConfig as SuperchainConfig,
+    IL1CrossDomainMessenger as L1CrossDomainMessenger
 } from "./interfaces/KontrolInterfaces.sol";
 
 contract OptimismPortalKontrol is DeploymentSummary, KontrolUtils {
     OptimismPortal optimismPortal;
     SuperchainConfig superchainConfig;
+    L1CrossDomainMessenger l1CrossDomainMessenger;
 
     function setUp() public {
         recreateDeployment();
         optimismPortal = OptimismPortal(payable(OptimismPortalProxyAddress));
         superchainConfig = SuperchainConfig(SuperchainConfigProxyAddress);
+        l1CrossDomainMessenger = L1CrossDomainMessenger(L1CrossDomainMessengerProxyAddress);
     }
 
     /// TODO: Replace struct parameters and workarounds with the appropiate
@@ -88,5 +91,32 @@ contract OptimismPortalKontrol is DeploymentSummary, KontrolUtils {
 
         vm.expectRevert("OptimismPortal: paused");
         optimismPortal.finalizeWithdrawalTransaction(_tx);
+    }
+
+    /// TODO: Replace struct parameters and workarounds with the appropiate
+    /// types once Kontrol supports symbolic `bytes` and `bytes[]`
+    function test_relayMessage_paused(
+        uint256 _nonce,
+        address _sender,
+        address _target,
+        uint256 _value,
+        uint256 _gas /* , */ /* bytes calldata _message */
+    )
+        external
+    {
+        bytes memory _message = freshBigBytes(600);
+
+        /* After deployment, L1CrossDomainMessenger is enabled */
+        require(l1CrossDomainMessenger.paused() == false, "L1CrossDomainMessenger should not be paused");
+
+        /* Pause System */
+        vm.prank(superchainConfig.guardian());
+        superchainConfig.pause("identifier");
+
+        /* L1CrossDomainMessenger is now paused */
+        require(l1CrossDomainMessenger.paused() == true, "L1CrossDomainMessenger should be paused");
+
+        vm.expectRevert("CrossDomainMessenger: paused");
+        l1CrossDomainMessenger.relayMessage(_nonce, _sender, _target, _value, _gas, _message);
     }
 }
