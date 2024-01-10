@@ -89,4 +89,29 @@ contract OptimismPortalKontrol is DeploymentSummary, KontrolUtils {
         vm.expectRevert("OptimismPortal: paused");
         optimismPortal.finalizeWithdrawalTransaction(_tx);
     }
+
+    /// TODO: symbolic `bytes`
+    function test_symbolic_proveWithdrawalTransaction_paused(
+        Types.WithdrawalTransaction memory _tx,
+        uint256 _l2OutputIndex,
+        Types.OutputRootProof calldata _outputRootProof,
+        bytes[] calldata _withdrawalProof
+    )
+        /* bytes[] calldata _withdrawalProof */
+        external
+    {
+        /* After deployment, Optimism portal is enabled */
+        require(optimismPortal.paused() == false, "Portal should not be paused");
+
+        /* Pause Optimism Portal */
+        vm.prank(optimismPortal.GUARDIAN());
+        superchainConfig.pause("identifier");
+
+        /* Portal is now paused */
+        require(optimismPortal.paused() == true, "Portal should be paused");
+
+        /* No one can call proveWithdrawalTransaction */
+        vm.expectRevert("OptimismPortal: paused");
+        optimismPortal.proveWithdrawalTransaction(_tx, _l2OutputIndex, _outputRootProof, _withdrawalProof);
+    }
 }

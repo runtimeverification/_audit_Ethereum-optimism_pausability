@@ -76,6 +76,7 @@ src = 'src/L1'
 out = 'kout-deployment'
 test = 'test/kontrol'
 script = 'scripts-kontrol'
+fs_permissions = [{ access = "read-write", path = "./"}]
 
 [profile.kprove]
 src = 'test/kontrol/proofs'
