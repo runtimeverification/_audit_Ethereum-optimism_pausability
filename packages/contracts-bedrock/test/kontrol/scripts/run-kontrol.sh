@@ -84,7 +84,8 @@ kontrol_build() {
                         --verbose                   \
                         --require ${lemmas}         \
                         --module-import ${module}   \
-                        ${rekompile}
+                        ${rekompile}                \
+                        ${no_forge_build}
             }
 
 kontrol_prove() {
@@ -201,6 +202,9 @@ rekompile=
 regen=--regen
 # shellcheck disable=SC2034
 regen=
+no_forge_build=--no-forge-build
+# Comment to compile with `--via-ir`
+no_forge_build=
 
 #########################
 # kontrol prove options #
@@ -243,6 +247,9 @@ if [ "${LOCAL}" == false ]; then
   fi
   start_docker
 fi
+
+# Uncomment to compile with `--via-ir`:
+# run forge build --via-ir
 
 kontrol_build
 kontrol_prove
