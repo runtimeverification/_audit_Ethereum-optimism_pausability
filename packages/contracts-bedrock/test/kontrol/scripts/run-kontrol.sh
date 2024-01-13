@@ -198,10 +198,10 @@ lemmas=test/kontrol/pausability-lemmas.k
 base_module=PAUSABILITY-LEMMAS
 module=OptimismPortalKontrol:${base_module}
 rekompile=--rekompile
-rekompile=
+# rekompile=
 regen=--regen
 # shellcheck disable=SC2034
-regen=
+# regen=
 no_forge_build=--no-forge-build
 # Comment to compile with `--via-ir`
 no_forge_build=

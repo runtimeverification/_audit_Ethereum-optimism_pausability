@@ -125,15 +125,15 @@ contract Deploy is Deployer {
     /// @notice Returns the proxy addresses. If a proxy is not found, it will have address(0).
     function _proxies() private view returns (Types.ContractSet memory proxies_) {
         proxies_ = Types.ContractSet({
-            L1CrossDomainMessenger: mustGetAddress("L1CrossDomainMessengerProxy"),
-            L1StandardBridge: mustGetAddress("L1StandardBridgeProxy"),
-            L2OutputOracle: mustGetAddress("L2OutputOracleProxy"),
-            OptimismMintableERC20Factory: mustGetAddress("OptimismMintableERC20FactoryProxy"),
-            OptimismPortal: mustGetAddress("OptimismPortalProxy"),
-            SystemConfig: mustGetAddress("SystemConfigProxy"),
-            L1ERC721Bridge: mustGetAddress("L1ERC721BridgeProxy"),
-            ProtocolVersions: mustGetAddress("ProtocolVersionsProxy"),
-            SuperchainConfig: mustGetAddress("SuperchainConfigProxy")
+            L1CrossDomainMessenger: getAddress("L1CrossDomainMessengerProxy"),
+            L1StandardBridge: getAddress("L1StandardBridgeProxy"),
+            L2OutputOracle: getAddress("L2OutputOracleProxy"),
+            OptimismMintableERC20Factory: getAddress("OptimismMintableERC20FactoryProxy"),
+            OptimismPortal: getAddress("OptimismPortalProxy"),
+            SystemConfig: getAddress("SystemConfigProxy"),
+            L1ERC721Bridge: getAddress("L1ERC721BridgeProxy"),
+            ProtocolVersions: getAddress("ProtocolVersionsProxy"),
+            SuperchainConfig: getAddress("SuperchainConfigProxy")
         });
     }
 
@@ -175,7 +175,7 @@ contract Deploy is Deployer {
 
     /// @notice Make a call from the Safe contract to an arbitrary address with arbitrary data
     function _callViaSafe(address _target, bytes memory _data) internal {
-        Safe safe = Safe(mustGetAddress("SystemOwnerSafe"));
+        Safe safe = Safe(getAddress("SystemOwnerSafe"));
 
         // This is the signature format used the caller is also the signer.
         bytes memory signature = abi.encodePacked(uint256(uint160(msg.sender)), bytes32(0), uint8(1));
@@ -196,7 +196,7 @@ contract Deploy is Deployer {
 
     /// @notice Call from the Safe contract to the Proxy Admin's upgrade and call method
     function _upgradeAndCallViaSafe(address _proxy, address _implementation, bytes memory _innerCallData) internal {
-        address proxyAdmin = mustGetAddress("ProxyAdmin");
+        address proxyAdmin = getAddress("ProxyAdmin");
 
         bytes memory data =
             abi.encodeCall(ProxyAdmin.upgradeAndCall, (payable(_proxy), _implementation, _innerCallData));
@@ -206,9 +206,9 @@ contract Deploy is Deployer {
 
     /// @notice Transfer ownership of the ProxyAdmin contract to the final system owner
     function transferProxyAdminOwnership() public broadcast {
-        ProxyAdmin proxyAdmin = ProxyAdmin(mustGetAddress("ProxyAdmin"));
+        ProxyAdmin proxyAdmin = ProxyAdmin(getAddress("ProxyAdmin"));
         address owner = proxyAdmin.owner();
-        address safe = mustGetAddress("SystemOwnerSafe");
+        address safe = getAddress("SystemOwnerSafe");
         if (owner != safe) {
             proxyAdmin.transferOwnership(safe);
             console.log("ProxyAdmin ownership transferred to Safe at: %s", safe);
@@ -281,10 +281,10 @@ contract Deploy is Deployer {
         console.log("Deploying OP Chain");
 
         // Ensure that the requisite contracts are deployed
-        mustGetAddress("SuperchainConfigProxy");
-        mustGetAddress("SystemOwnerSafe");
-        mustGetAddress("AddressManager");
-        mustGetAddress("ProxyAdmin");
+        getAddress("SuperchainConfigProxy");
+        getAddress("SystemOwnerSafe");
+        getAddress("AddressManager");
+        getAddress("ProxyAdmin");
 
         deployProxies();
         deployImplementations();
@@ -383,7 +383,7 @@ contract Deploy is Deployer {
         ProxyAdmin admin = new ProxyAdmin({ _owner: msg.sender });
         require(admin.owner() == msg.sender);
 
-        AddressManager addressManager = AddressManager(mustGetAddress("AddressManager"));
+        AddressManager addressManager = AddressManager(getAddress("AddressManager"));
         if (admin.addressManager() != addressManager) {
             admin.setAddressManager(addressManager);
         }
@@ -412,7 +412,7 @@ contract Deploy is Deployer {
     /// @notice Deploy the L1StandardBridgeProxy using a ChugSplashProxy
     function deployL1StandardBridgeProxy() public broadcast returns (address addr_) {
         console.log("Deploying proxy for L1StandardBridge");
-        address proxyAdmin = mustGetAddress("ProxyAdmin");
+        address proxyAdmin = getAddress("ProxyAdmin");
         L1ChugSplashProxy proxy = new L1ChugSplashProxy(proxyAdmin);
 
         address admin = address(uint160(uint256(vm.load(address(proxy), OWNER_KEY))));
@@ -426,7 +426,7 @@ contract Deploy is Deployer {
     /// @notice Deploy the L1CrossDomainMessengerProxy using a ResolvedDelegateProxy
     function deployL1CrossDomainMessengerProxy() public broadcast returns (address addr_) {
         console.log("Deploying proxy for L1CrossDomainMessenger");
-        AddressManager addressManager = AddressManager(mustGetAddress("AddressManager"));
+        AddressManager addressManager = AddressManager(getAddress("AddressManager"));
         ResolvedDelegateProxy proxy = new ResolvedDelegateProxy(addressManager, "OVM_L1CrossDomainMessenger");
 
         save("L1CrossDomainMessengerProxy", address(proxy));
@@ -437,7 +437,7 @@ contract Deploy is Deployer {
 
     function deployERC1967Proxy(string memory _name) public broadcast returns (address addr_) {
         console.log(string.concat("Deploying ERC1967 proxy for", _name, ""));
-        address proxyAdmin = mustGetAddress("ProxyAdmin");
+        address proxyAdmin = getAddress("ProxyAdmin");
         Proxy proxy = new Proxy({ _admin: proxyAdmin });
 
         address admin = address(uint160(uint256(vm.load(address(proxy), OWNER_KEY))));
@@ -467,7 +467,7 @@ contract Deploy is Deployer {
     /// @notice Deploy the L1CrossDomainMessenger
     function deployL1CrossDomainMessenger() public broadcast returns (address addr_) {
         console.log("Deploying L1CrossDomainMessenger implementation");
-        address portal = mustGetAddress("OptimismPortalProxy");
+        address portal = getAddress("OptimismPortalProxy");
         L1CrossDomainMessenger messenger =
             new L1CrossDomainMessenger{ salt: _implSalt() }({ _portal: OptimismPortal(payable(portal)) });
 
@@ -490,8 +490,8 @@ contract Deploy is Deployer {
     function deployOptimismPortal() public broadcast returns (address addr_) {
         console.log("Deploying OptimismPortal implementation");
 
-        L2OutputOracle l2OutputOracle = L2OutputOracle(mustGetAddress("L2OutputOracleProxy"));
-        SystemConfig systemConfig = SystemConfig(mustGetAddress("SystemConfigProxy"));
+        L2OutputOracle l2OutputOracle = L2OutputOracle(getAddress("L2OutputOracleProxy"));
+        SystemConfig systemConfig = SystemConfig(getAddress("SystemConfigProxy"));
 
         OptimismPortal portal =
             new OptimismPortal{ salt: _implSalt() }({ _l2Oracle: l2OutputOracle, _systemConfig: systemConfig });
@@ -542,7 +542,7 @@ contract Deploy is Deployer {
     /// @notice Deploy the OptimismMintableERC20Factory
     function deployOptimismMintableERC20Factory() public broadcast returns (address addr_) {
         console.log("Deploying OptimismMintableERC20Factory implementation");
-        address l1standardBridgeProxy = mustGetAddress("L1StandardBridgeProxy");
+        address l1standardBridgeProxy = getAddress("L1StandardBridgeProxy");
         OptimismMintableERC20Factory factory =
             new OptimismMintableERC20Factory{ salt: _implSalt() }({ _bridge: l1standardBridgeProxy });
 
@@ -611,7 +611,7 @@ contract Deploy is Deployer {
     /// @notice Deploy Mips
     function deployMips() public onlyDevnet broadcast returns (address addr_) {
         console.log("Deploying Mips implementation");
-        MIPS mips = new MIPS{ salt: _implSalt() }(IPreimageOracle(mustGetAddress("PreimageOracle")));
+        MIPS mips = new MIPS{ salt: _implSalt() }(IPreimageOracle(getAddress("PreimageOracle")));
         save("Mips", address(mips));
         console.log("MIPS deployed at %s", address(mips));
 
@@ -651,7 +651,7 @@ contract Deploy is Deployer {
     /// @notice Deploy the L1StandardBridge
     function deployL1StandardBridge() public broadcast returns (address addr_) {
         console.log("Deploying L1StandardBridge implementation");
-        address l1CrossDomainMessengerProxy = mustGetAddress("L1CrossDomainMessengerProxy");
+        address l1CrossDomainMessengerProxy = getAddress("L1CrossDomainMessengerProxy");
 
         L1StandardBridge bridge =
             new L1StandardBridge{ salt: _implSalt() }({ _messenger: payable(l1CrossDomainMessengerProxy) });
@@ -672,7 +672,7 @@ contract Deploy is Deployer {
     /// @notice Deploy the L1ERC721Bridge
     function deployL1ERC721Bridge() public broadcast returns (address addr_) {
         console.log("Deploying L1ERC721Bridge implementation");
-        address l1CrossDomainMessengerProxy = mustGetAddress("L1CrossDomainMessengerProxy");
+        address l1CrossDomainMessengerProxy = getAddress("L1CrossDomainMessengerProxy");
         L1ERC721Bridge bridge = new L1ERC721Bridge{ salt: _implSalt() }({ _messenger: l1CrossDomainMessengerProxy });
 
         save("L1ERC721Bridge", address(bridge));
@@ -692,9 +692,9 @@ contract Deploy is Deployer {
     /// @notice Transfer ownership of the address manager to the ProxyAdmin
     function transferAddressManagerOwnership() public broadcast {
         console.log("Transferring AddressManager ownership to ProxyAdmin");
-        AddressManager addressManager = AddressManager(mustGetAddress("AddressManager"));
+        AddressManager addressManager = AddressManager(getAddress("AddressManager"));
         address owner = addressManager.owner();
-        address proxyAdmin = mustGetAddress("ProxyAdmin");
+        address proxyAdmin = getAddress("ProxyAdmin");
         if (owner != proxyAdmin) {
             addressManager.transferOwnership(proxyAdmin);
             console.log("AddressManager ownership transferred to %s", proxyAdmin);
@@ -709,8 +709,8 @@ contract Deploy is Deployer {
 
     /// @notice Initialize the SuperchainConfig
     function initializeSuperchainConfig() public broadcast {
-        address payable superchainConfigProxy = mustGetAddress("SuperchainConfigProxy");
-        address payable superchainConfig = mustGetAddress("SuperchainConfig");
+        address payable superchainConfigProxy = getAddress("SuperchainConfigProxy");
+        address payable superchainConfig = getAddress("SuperchainConfig");
         _upgradeAndCallViaSafe({
             _proxy: superchainConfigProxy,
             _implementation: superchainConfig,
@@ -723,8 +723,8 @@ contract Deploy is Deployer {
     /// @notice Initialize the DisputeGameFactory
     function initializeDisputeGameFactory() public onlyDevnet broadcast {
         console.log("Upgrading and initializing DisputeGameFactory proxy");
-        address disputeGameFactoryProxy = mustGetAddress("DisputeGameFactoryProxy");
-        address disputeGameFactory = mustGetAddress("DisputeGameFactory");
+        address disputeGameFactoryProxy = getAddress("DisputeGameFactoryProxy");
+        address disputeGameFactory = getAddress("DisputeGameFactory");
 
         _upgradeAndCallViaSafe({
             _proxy: payable(disputeGameFactoryProxy),
@@ -739,8 +739,8 @@ contract Deploy is Deployer {
     /// @notice Initialize the SystemConfig
     function initializeSystemConfig() public broadcast {
         console.log("Upgrading and initializing SystemConfig proxy");
-        address systemConfigProxy = mustGetAddress("SystemConfigProxy");
-        address systemConfig = mustGetAddress("SystemConfig");
+        address systemConfigProxy = getAddress("SystemConfigProxy");
+        address systemConfig = getAddress("SystemConfig");
 
         bytes32 batcherHash = bytes32(uint256(uint160(cfg.batchSenderAddress())));
 
@@ -773,10 +773,10 @@ contract Deploy is Deployer {
     /// @notice Initialize the L1StandardBridge
     function initializeL1StandardBridge() public broadcast {
         console.log("Upgrading and initializing L1StandardBridge proxy");
-        ProxyAdmin proxyAdmin = ProxyAdmin(mustGetAddress("ProxyAdmin"));
-        address l1StandardBridgeProxy = mustGetAddress("L1StandardBridgeProxy");
-        address l1StandardBridge = mustGetAddress("L1StandardBridge");
-        address superchainConfigProxy = mustGetAddress("SuperchainConfigProxy");
+        ProxyAdmin proxyAdmin = ProxyAdmin(getAddress("ProxyAdmin"));
+        address l1StandardBridgeProxy = getAddress("L1StandardBridgeProxy");
+        address l1StandardBridge = getAddress("L1StandardBridge");
+        address superchainConfigProxy = getAddress("SuperchainConfigProxy");
 
         uint256 proxyType = uint256(proxyAdmin.proxyType(l1StandardBridgeProxy));
         if (proxyType != uint256(ProxyAdmin.ProxyType.CHUGSPLASH)) {
@@ -802,9 +802,9 @@ contract Deploy is Deployer {
     /// @notice Initialize the L1ERC721Bridge
     function initializeL1ERC721Bridge() public broadcast {
         console.log("Upgrading and initializing L1ERC721Bridge proxy");
-        address l1ERC721BridgeProxy = mustGetAddress("L1ERC721BridgeProxy");
-        address l1ERC721Bridge = mustGetAddress("L1ERC721Bridge");
-        address superchainConfigProxy = mustGetAddress("SuperchainConfigProxy");
+        address l1ERC721BridgeProxy = getAddress("L1ERC721BridgeProxy");
+        address l1ERC721Bridge = getAddress("L1ERC721Bridge");
+        address superchainConfigProxy = getAddress("SuperchainConfigProxy");
 
         _upgradeAndCallViaSafe({
             _proxy: payable(l1ERC721BridgeProxy),
@@ -822,9 +822,9 @@ contract Deploy is Deployer {
     /// @notice Ininitialize the OptimismMintableERC20Factory
     function initializeOptimismMintableERC20Factory() public broadcast {
         console.log("Upgrading and initializing OptimismMintableERC20Factory proxy");
-        address proxyAdmin = mustGetAddress("ProxyAdmin");
-        address optimismMintableERC20FactoryProxy = mustGetAddress("OptimismMintableERC20FactoryProxy");
-        address optimismMintableERC20Factory = mustGetAddress("OptimismMintableERC20Factory");
+        address proxyAdmin = getAddress("ProxyAdmin");
+        address optimismMintableERC20FactoryProxy = getAddress("OptimismMintableERC20FactoryProxy");
+        address optimismMintableERC20Factory = getAddress("OptimismMintableERC20Factory");
 
         _callViaSafe({
             _target: proxyAdmin,
@@ -843,10 +843,10 @@ contract Deploy is Deployer {
     /// @notice initializeL1CrossDomainMessenger
     function initializeL1CrossDomainMessenger() public broadcast {
         console.log("Upgrading and initializing L1CrossDomainMessenger proxy");
-        ProxyAdmin proxyAdmin = ProxyAdmin(mustGetAddress("ProxyAdmin"));
-        address l1CrossDomainMessengerProxy = mustGetAddress("L1CrossDomainMessengerProxy");
-        address l1CrossDomainMessenger = mustGetAddress("L1CrossDomainMessenger");
-        SuperchainConfig superchainConfigProxy = SuperchainConfig(mustGetAddress("SuperchainConfigProxy"));
+        ProxyAdmin proxyAdmin = ProxyAdmin(getAddress("ProxyAdmin"));
+        address l1CrossDomainMessengerProxy = getAddress("L1CrossDomainMessengerProxy");
+        address l1CrossDomainMessenger = getAddress("L1CrossDomainMessenger");
+        SuperchainConfig superchainConfigProxy = SuperchainConfig(getAddress("SuperchainConfigProxy"));
 
         uint256 proxyType = uint256(proxyAdmin.proxyType(l1CrossDomainMessengerProxy));
         if (proxyType != uint256(ProxyAdmin.ProxyType.RESOLVED)) {
@@ -890,8 +890,8 @@ contract Deploy is Deployer {
     /// @notice Initialize the L2OutputOracle
     function initializeL2OutputOracle() public broadcast {
         console.log("Upgrading and initializing L2OutputOracle proxy");
-        address l2OutputOracleProxy = mustGetAddress("L2OutputOracleProxy");
-        address l2OutputOracle = mustGetAddress("L2OutputOracle");
+        address l2OutputOracleProxy = getAddress("L2OutputOracleProxy");
+        address l2OutputOracle = getAddress("L2OutputOracle");
 
         _upgradeAndCallViaSafe({
             _proxy: payable(l2OutputOracleProxy),
@@ -918,9 +918,9 @@ contract Deploy is Deployer {
     /// @notice Initialize the OptimismPortal
     function initializeOptimismPortal() public broadcast {
         console.log("Upgrading and initializing OptimismPortal proxy");
-        address optimismPortalProxy = mustGetAddress("OptimismPortalProxy");
-        address optimismPortal = mustGetAddress("OptimismPortal");
-        SuperchainConfig superchainConfigProxy = SuperchainConfig(mustGetAddress("SuperchainConfigProxy"));
+        address optimismPortalProxy = getAddress("OptimismPortalProxy");
+        address optimismPortal = getAddress("OptimismPortal");
+        SuperchainConfig superchainConfigProxy = SuperchainConfig(getAddress("SuperchainConfigProxy"));
 
         _upgradeAndCallViaSafe({
             _proxy: payable(optimismPortalProxy),
@@ -939,8 +939,8 @@ contract Deploy is Deployer {
 
     function initializeProtocolVersions() public broadcast {
         console.log("Upgrading and initializing ProtocolVersions proxy");
-        address protocolVersionsProxy = mustGetAddress("ProtocolVersionsProxy");
-        address protocolVersions = mustGetAddress("ProtocolVersions");
+        address protocolVersionsProxy = getAddress("ProtocolVersionsProxy");
+        address protocolVersions = getAddress("ProtocolVersions");
 
         address finalSystemOwner = cfg.finalSystemOwner();
         uint256 requiredProtocolVersion = cfg.requiredProtocolVersion();
@@ -971,10 +971,10 @@ contract Deploy is Deployer {
     /// @notice Transfer ownership of the DisputeGameFactory contract to the final system owner
     function transferDisputeGameFactoryOwnership() public onlyDevnet broadcast {
         console.log("Transferring DisputeGameFactory ownership to Safe");
-        DisputeGameFactory disputeGameFactory = DisputeGameFactory(mustGetAddress("DisputeGameFactoryProxy"));
+        DisputeGameFactory disputeGameFactory = DisputeGameFactory(getAddress("DisputeGameFactoryProxy"));
         address owner = disputeGameFactory.owner();
 
-        address safe = mustGetAddress("SystemOwnerSafe");
+        address safe = getAddress("SystemOwnerSafe");
         if (owner != safe) {
             disputeGameFactory.transferOwnership(safe);
             console.log("DisputeGameFactory ownership transferred to Safe at: %s", safe);
@@ -1011,14 +1011,14 @@ contract Deploy is Deployer {
     /// @notice Sets the implementation for the `FAULT` game type in the `DisputeGameFactory`
     function setCannonFaultGameImplementation() public onlyDevnet broadcast {
         console.log("Setting Cannon FaultDisputeGame implementation");
-        DisputeGameFactory factory = DisputeGameFactory(mustGetAddress("DisputeGameFactoryProxy"));
+        DisputeGameFactory factory = DisputeGameFactory(getAddress("DisputeGameFactoryProxy"));
 
         // Set the Cannon FaultDisputeGame implementation in the factory.
         _setFaultGameImplementation({
             _factory: factory,
             _gameType: GameTypes.CANNON,
             _absolutePrestate: loadMipsAbsolutePrestate(),
-            _faultVm: IBigStepper(mustGetAddress("Mips")),
+            _faultVm: IBigStepper(getAddress("Mips")),
             _maxGameDepth: 30 // Hard code depth for legacy game to keep e2e tests fast
          });
     }
@@ -1026,13 +1026,13 @@ contract Deploy is Deployer {
     /// @notice Sets the implementation for the `OUTPUT_CANNON` game type in the `DisputeGameFactory`
     function setCannonOutputBisectionGameImplementation() public onlyDevnet broadcast {
         console.log("Setting Cannon OutputBisectionGame implementation");
-        DisputeGameFactory factory = DisputeGameFactory(mustGetAddress("DisputeGameFactoryProxy"));
+        DisputeGameFactory factory = DisputeGameFactory(getAddress("DisputeGameFactoryProxy"));
 
         _setFaultGameImplementation({
             _factory: factory,
             _gameType: GameTypes.OUTPUT_CANNON,
             _absolutePrestate: loadMipsAbsolutePrestate(),
-            _faultVm: IBigStepper(mustGetAddress("Mips")),
+            _faultVm: IBigStepper(getAddress("Mips")),
             _maxGameDepth: cfg.faultGameMaxDepth()
         });
     }
@@ -1040,7 +1040,7 @@ contract Deploy is Deployer {
     /// @notice Sets the implementation for the `OUTPUT_ALPHABET` game type in the `DisputeGameFactory`
     function setAlphabetOutputBisectionGameImplementation() public onlyDevnet broadcast {
         console.log("Setting Alphabet OutputBisectionGame implementation");
-        DisputeGameFactory factory = DisputeGameFactory(mustGetAddress("DisputeGameFactoryProxy"));
+        DisputeGameFactory factory = DisputeGameFactory(getAddress("DisputeGameFactoryProxy"));
 
         Claim outputAbsolutePrestate = Claim.wrap(bytes32(cfg.faultGameAbsolutePrestate()));
         _setFaultGameImplementation({
@@ -1055,7 +1055,7 @@ contract Deploy is Deployer {
     /// @notice Sets the implementation for the `ALPHABET` game type in the `DisputeGameFactory`
     function setAlphabetFaultGameImplementation() public onlyDevnet broadcast {
         console.log("Setting Alphabet FaultDisputeGame implementation");
-        DisputeGameFactory factory = DisputeGameFactory(mustGetAddress("DisputeGameFactoryProxy"));
+        DisputeGameFactory factory = DisputeGameFactory(getAddress("DisputeGameFactoryProxy"));
 
         // Set the Alphabet FaultDisputeGame implementation in the factory.
         Claim alphabetAbsolutePrestate = Claim.wrap(bytes32(cfg.faultGameAbsolutePrestate()));
@@ -1115,8 +1115,8 @@ contract Deploy is Deployer {
                     _maxGameDepth: _maxGameDepth,
                     _gameDuration: Duration.wrap(uint64(cfg.faultGameMaxDuration())),
                     _vm: _faultVm,
-                    _l2oo: L2OutputOracle(mustGetAddress("L2OutputOracleProxy")),
-                    _blockOracle: BlockOracle(mustGetAddress("BlockOracle"))
+                    _l2oo: L2OutputOracle(getAddress("L2OutputOracleProxy")),
+                    _blockOracle: BlockOracle(getAddress("BlockOracle"))
                 })
             );
         }
