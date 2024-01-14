@@ -719,59 +719,14 @@ module PAUSABILITY-LEMMAS [symbolic]
     // NEW: SUMMARIES
     //
 
-    // rule [copy-memory-to-memory-provable-full]:
-    //   <k> #execute ... </k>
-    //   <useGas> false </useGas>
-    //   <schedule> SHANGHAI </schedule>
-    //   <jumpDests> JUMPDESTS </jumpDests>
-    //   // The program and program counter are symbolic, focusing on the part we will be executing (CP)
-    //   <program> PROGRAM </program>
-    //   <pc> PCOUNT => PCOUNT +Int lengthBytes(CP) </pc>
-    //   // The word stack has the appropriate form, as per the compiled code
-    //   <wordStack> SRC : DEST : LENGTH : WS </wordStack>
-    //   // The program copies LENGTH bytes of memory from SRC +Int 32 to DEST +Int OFFSET,
-    //   // padded with 32 zeros in case LENGTH is not divisible by 32
-    //   <localMem>
-    //     LM => LM [ DEST := #range ( LM, SRC, LENGTH ) +Bytes
-    //                        #buf ( ( ( notMaxUInt5 &Int ( LENGTH +Int maxUInt5 ) ) -Int LENGTH ) , 0 ) +Bytes
-    //                        #buf ( ( ( ( 32 -Int ( ( notMaxUInt5 &Int ( LENGTH +Int maxUInt5 ) ) -Int LENGTH ) ) ) modInt 32 ), 0 ) ]
-    //   </localMem>
-    //   requires
-    //    // OP is the program corresponding to the compiled EVM bytecode shown above, starting from program counter 1427
-    //            OP ==K b"[`\x00[\x83\x81\x10\x15b\x00]'W\x81\x81\x01Q\x83\x82\x01R` \x01b\x00]\rV[\x83\x81\x11\x15b\x00]7W`\x00\x84\x84\x01R[P"
-    //    andBool CP ==K #range(PROGRAM, PCOUNT, lengthBytes(OP))
-
-    //    // The current program we are executing differs from the original one only in the hardcoded jump addresses,
-    //    // which are now relative to PCOUNT, and the hardcoded offset, which is now symbolic.
-    //    andBool CP ==K OP
-    //                   [ 09 := #buf(3, PCOUNT +Int 29) ]
-    //                   [ 25 := #buf(3, PCOUNT +Int  3) ]
-    //                   [ 35 := #buf(3, PCOUNT +Int 45) ]
-
-    //    // Various well-formedness constraints. In particular, the maxBytesLength-related ones are present to
-    //    // remove various chops that would otherwise creep into the execution, and are reasonable since byte
-    //    // arrays in actual programs would never reach that size.
-    //    andBool 0 <=Int PCOUNT
-    //    andBool 0 <=Int LENGTH andBool LENGTH <Int maxBytesLength
-    //    andBool 0 <=Int SRC    andBool SRC    <Int maxBytesLength
-    //    andBool 0 <=Int DEST   andBool DEST   <Int maxBytesLength
-    //    andBool #sizeWordStack(WS) <=Int 1015
-
-    //    andBool SRC +Int LENGTH <=Int DEST // No overlap between source and destination
-    //    andBool DEST <=Int lengthBytes(LM) // Destination starts within current memory
-    //    // All JUMPDESTs in the program are valid
-    //    andBool PCOUNT in JUMPDESTS andBool (PCOUNT +Int 3) in JUMPDESTS andBool (PCOUNT +Int 29) in JUMPDESTS andBool (PCOUNT +Int 45) in JUMPDESTS
-    //    andBool PCOUNT +Int lengthBytes(CP) <Int 2 ^Int 16  // and fit into two bytes
-    //   [priority(30), concrete(JUMPDESTS, PROGRAM, PCOUNT)]
-
-    rule [copy-memory-to-memory-provable-full-pcount-conc]:
+    rule [copy-memory-to-memory-provable-full]:
       <k> #execute ... </k>
       <useGas> false </useGas>
       <schedule> SHANGHAI </schedule>
       <jumpDests> JUMPDESTS </jumpDests>
       // The program and program counter are symbolic, focusing on the part we will be executing (CP)
       <program> PROGRAM </program>
-      <pc> 23818 => 23818 +Int lengthBytes(CP) </pc>
+      <pc> PCOUNT => PCOUNT +Int 47 </pc>
       // The word stack has the appropriate form, as per the compiled code
       <wordStack> SRC : DEST : LENGTH : WS </wordStack>
       // The program copies LENGTH bytes of memory from SRC +Int 32 to DEST +Int OFFSET,
@@ -782,17 +737,17 @@ module PAUSABILITY-LEMMAS [symbolic]
                            #buf ( ( ( ( 32 -Int ( ( notMaxUInt5 &Int ( LENGTH +Int maxUInt5 ) ) -Int LENGTH ) ) ) modInt 32 ), 0 ) ]
       </localMem>
       requires
-       // OP is the program corresponding to the compiled EVM bytecode shown above, starting from program counter 1427
-               OP ==K b"[`\x00[\x83\x81\x10\x15b\x00]'W\x81\x81\x01Q\x83\x82\x01R` \x01b\x00]\rV[\x83\x81\x11\x15b\x00]7W`\x00\x84\x84\x01R[P"
-       andBool CP ==K #range(PROGRAM, 23818, lengthBytes(OP))
-
        // The current program we are executing differs from the original one only in the hardcoded jump addresses,
        // which are now relative to PCOUNT, and the hardcoded offset, which is now symbolic.
-       andBool CP ==K OP
+               #range(PROGRAM, PCOUNT, 47) ==K b"[`\x00[\x83\x81\x10\x15b\x00]'W\x81\x81\x01Q\x83\x82\x01R` \x01b\x00]\rV[\x83\x81\x11\x15b\x00]7W`\x00\x84\x84\x01R[P"
+                                               [ 09 := #buf(3, PCOUNT +Int 29) ]
+                                               [ 25 := #buf(3, PCOUNT +Int  3) ]
+                                               [ 35 := #buf(3, PCOUNT +Int 45) ]
 
        // Various well-formedness constraints. In particular, the maxBytesLength-related ones are present to
        // remove various chops that would otherwise creep into the execution, and are reasonable since byte
        // arrays in actual programs would never reach that size.
+       andBool 0 <=Int PCOUNT
        andBool 0 <=Int LENGTH andBool LENGTH <Int maxBytesLength
        andBool 0 <=Int SRC    andBool SRC    <Int maxBytesLength
        andBool 0 <=Int DEST   andBool DEST   <Int maxBytesLength
@@ -801,8 +756,9 @@ module PAUSABILITY-LEMMAS [symbolic]
        andBool SRC +Int LENGTH <=Int DEST // No overlap between source and destination
        andBool DEST <=Int lengthBytes(LM) // Destination starts within current memory
        // All JUMPDESTs in the program are valid
-       andBool 23818 in JUMPDESTS andBool (23818 +Int 3) in JUMPDESTS andBool (23818 +Int 29) in JUMPDESTS andBool (23818 +Int 45) in JUMPDESTS
-      [priority(30), concrete(JUMPDESTS, PROGRAM)]
+       andBool PCOUNT in JUMPDESTS andBool (PCOUNT +Int 3) in JUMPDESTS andBool (PCOUNT +Int 29) in JUMPDESTS andBool (PCOUNT +Int 45) in JUMPDESTS
+       andBool PCOUNT +Int 47 <Int 2 ^Int 16  // and fit into two bytes
+      [priority(30), concrete(JUMPDESTS, PROGRAM, PCOUNT), preserves-definedness]
 
 endmodule
 
