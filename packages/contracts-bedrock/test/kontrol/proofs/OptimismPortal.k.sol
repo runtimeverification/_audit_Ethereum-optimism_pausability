@@ -13,7 +13,7 @@ contract OptimismPortalKontrol is DeploymentSummary, KontrolUtils {
     SuperchainConfig superchainConfig;
 
     function setUp() public {
-        recreateDeployment();
+        // recreateDeployment();
         optimismPortal = OptimismPortal(payable(OptimismPortalProxyAddress));
         superchainConfig = SuperchainConfig(SuperchainConfigProxyAddress);
     }

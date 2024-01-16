@@ -102,7 +102,8 @@ kontrol_prove() {
                         ${break_on_calls}                  \
                         ${auto_abstract}                   \
                         ${tests}                           \
-                        ${use_booster}
+                        ${use_booster}                     \
+                        --init-node-from snapshots/state-diff/Kontrol-Deploy.json
 }
 
 start_docker () {
