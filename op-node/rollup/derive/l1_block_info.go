@@ -182,7 +182,11 @@ func (info *L1BlockInfo) marshalBinaryEcotone() ([]byte, error) {
 	if err := solabi.WriteUint256(w, info.BaseFee); err != nil {
 		return nil, err
 	}
-	if err := solabi.WriteUint256(w, info.BlobBaseFee); err != nil {
+	blobBasefee := info.BlobBaseFee
+	if blobBasefee == nil {
+		blobBasefee = big.NewInt(1) // set to 1, to match the min blob basefee as defined in EIP-4844
+	}
+	if err := solabi.WriteUint256(w, blobBasefee); err != nil {
 		return nil, err
 	}
 	if err := solabi.WriteHash(w, info.BlockHash); err != nil {
@@ -269,8 +273,8 @@ func L1InfoDeposit(rollupCfg *rollup.Config, sysCfg eth.SystemConfig, seqNumber 
 	var err error
 	if isEcotoneButNotFirstBlock(rollupCfg, l2BlockTime) {
 		l1BlockInfo.BlobBaseFee = block.BlobBaseFee()
-		l1BlockInfo.BlobBaseFeeScalar = sysCfg.BlobBasefeeScalar
-		l1BlockInfo.BaseFeeScalar = sysCfg.BasefeeScalar
+		l1BlockInfo.BlobBaseFeeScalar = sysCfg.BlobBaseFeeScalar
+		l1BlockInfo.BaseFeeScalar = sysCfg.BaseFeeScalar
 		data, err = l1BlockInfo.marshalBinaryEcotone()
 	} else {
 		l1BlockInfo.L1FeeOverhead = sysCfg.Overhead

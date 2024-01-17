@@ -33,6 +33,7 @@ type L2Verifier struct {
 	}
 
 	// L2 rollup
+	engine     *derive.EngineController
 	derivation *derive.DerivationPipeline
 
 	l1      derive.L1Fetcher
@@ -57,14 +58,24 @@ type L2API interface {
 	OutputV0AtBlock(ctx context.Context, blockHash common.Hash) (*eth.OutputV0, error)
 }
 
+type EmptyBlobsSource struct {
+}
+
+func (b *EmptyBlobsSource) GetBlobs(ctx context.Context, ref eth.L1BlockRef, hashes []eth.IndexedBlobHash) ([]*eth.Blob, error) {
+	return nil, nil
+}
+
 func NewL2Verifier(t Testing, log log.Logger, l1 derive.L1Fetcher, eng L2API, cfg *rollup.Config, syncCfg *sync.Config) *L2Verifier {
 	metrics := &testutils.TestDerivationMetrics{}
-	pipeline := derive.NewDerivationPipeline(log, cfg, l1, nil, eng, metrics, syncCfg)
+	engine := derive.NewEngineController(eng, log, metrics, cfg, syncCfg.SyncMode)
+	blobsSrc := &EmptyBlobsSource{}
+	pipeline := derive.NewDerivationPipeline(log, cfg, l1, blobsSrc, eng, engine, metrics, syncCfg)
 	pipeline.Reset()
 
 	rollupNode := &L2Verifier{
 		log:            log,
 		eng:            eng,
+		engine:         engine,
 		derivation:     pipeline,
 		l1:             l1,
 		l1State:        driver.NewL1State(log, metrics),
@@ -132,19 +143,19 @@ func (s *l2VerifierBackend) OnUnsafeL2Payload(ctx context.Context, payload *eth.
 }
 
 func (s *L2Verifier) L2Finalized() eth.L2BlockRef {
-	return s.derivation.Finalized()
+	return s.engine.Finalized()
 }
 
 func (s *L2Verifier) L2Safe() eth.L2BlockRef {
-	return s.derivation.SafeL2Head()
+	return s.engine.SafeL2Head()
 }
 
 func (s *L2Verifier) L2PendingSafe() eth.L2BlockRef {
-	return s.derivation.PendingSafeL2Head()
+	return s.engine.PendingSafeL2Head()
 }
 
 func (s *L2Verifier) L2Unsafe() eth.L2BlockRef {
-	return s.derivation.UnsafeL2Head()
+	return s.engine.UnsafeL2Head()
 }
 
 func (s *L2Verifier) SyncStatus() *eth.SyncStatus {
@@ -158,7 +169,6 @@ func (s *L2Verifier) SyncStatus() *eth.SyncStatus {
 		SafeL2:             s.L2Safe(),
 		FinalizedL2:        s.L2Finalized(),
 		PendingSafeL2:      s.L2PendingSafe(),
-		UnsafeL2SyncTarget: s.derivation.UnsafeL2SyncTarget(),
 	}
 }
 

@@ -55,7 +55,7 @@ contract OptimismPortalKontrol is DeploymentSummary, KontrolUtils {
         superchainConfig.pause("identifier");
 
         // Portal is now paused
-        require(optimismPortal.paused() == true, "Portal should be paused");
+        require(optimismPortal.paused(), "Portal should be paused");
 
         // No one can call proveWithdrawalTransaction
         vm.expectRevert("OptimismPortal: paused");
@@ -87,7 +87,7 @@ contract OptimismPortalKontrol is DeploymentSummary, KontrolUtils {
         superchainConfig.pause("identifier");
 
         // Portal is now paused
-        require(optimismPortal.paused() == true, "Portal should be paused");
+        require(optimismPortal.paused(), "Portal should be paused");
 
         vm.expectRevert("OptimismPortal: paused");
         optimismPortal.finalizeWithdrawalTransaction(_tx);
