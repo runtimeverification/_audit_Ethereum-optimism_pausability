@@ -197,7 +197,7 @@ module PAUSABILITY-LEMMAS [symbolic]
     // &Int yields zero for notMax and operand in appropriate range
     rule [bitwise-and-zero]:
       X &Int Y => 0
-      requires 0 <=Int X
+      requires #rangeUInt(256, X)
        andBool pow256 -Int X ==Int 2 ^Int log2Int(pow256 -Int X)
        andBool 0 <=Int Y andBool Y <Int 2 ^Int log2Int(pow256 -Int X)
        [concrete(X), simplification, comm]
@@ -549,7 +549,7 @@ module PAUSABILITY-LEMMAS [symbolic]
 
     // <Int via ByteArray length
     rule #asWord ( BA ) <Int X => true
-        requires lengthBytes( BA ) <=Int log2Int( X ) divInt 8
+        requires 0 <Int X andBool lengthBytes( BA ) <=Int log2Int( X ) divInt 8
         [simplification, concrete(X)]
 
     // #asWord is not equal to the target if the leading bytes alone are greater than the target
@@ -614,6 +614,13 @@ module PAUSABILITY-LEMMAS [symbolic]
         requires S +Int W <=Int 32
          andBool (2 ^Int (8 *Int W)) <=Int Y
         [concrete(S, W, Y), simplification]
+
+    // #asWord is equality
+    rule #asWord ( #range ( #buf (SIZE, X), START, WIDTH) ) => X
+      requires 0 <=Int SIZE andBool 0 <=Int X andBool 0 <=Int START andBool 0 <=Int WIDTH
+       andBool SIZE ==Int START +Int WIDTH
+       andBool X <Int 2 ^Int (8 *Int WIDTH)
+      [simplification, concrete(SIZE, START, WIDTH)]
 
     //
     // #asInteger
