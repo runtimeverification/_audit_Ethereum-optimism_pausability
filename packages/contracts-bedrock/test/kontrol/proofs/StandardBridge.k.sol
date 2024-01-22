@@ -13,7 +13,7 @@ contract StandardBridgeKontrol is DeploymentSummary, KontrolUtils {
     StandardBridge standardBridge;
     SuperchainConfig superchainConfig;
 
-    function setUp() public {
+    function setUpInlined() public {
         recreateDeployment();
         standardBridge = StandardBridge(payable(L1StandardBridgeProxyAddress));
         superchainConfig = SuperchainConfig(SuperchainConfigProxyAddress);
@@ -32,6 +32,13 @@ contract StandardBridgeKontrol is DeploymentSummary, KontrolUtils {
     )
         public
     {
+        setUpInlined();
+        /* bytes32 xDomainMsgSenderDefault = hex"000000000000000000000000000000000000000000000000000000000000dead"; */
+        /* vm.assume(bytes32(uint256(uint160(xDomainMsgSenderValue))) != xDomainMsgSenderDefault); */
+        bytes32 slot = hex"00000000000000000000000000000000000000000000000000000000000000cc";
+        bytes32 value = bytes32(uint256(uint160(address(standardBridge.OTHER_BRIDGE()))));
+        /* bytes32 value = bytes32(uint256(uint160(xDomainMsgSenderValue))); */
+        vm.store(L1CrossDomainMessengerProxyAddress, slot, value);
         /* bytes memory _extraData = freshBigBytes(320); */
 
         // After deployment, Optimism portal is enabled
@@ -45,7 +52,7 @@ contract StandardBridgeKontrol is DeploymentSummary, KontrolUtils {
         require(standardBridge.paused() == true, "Bridge should be paused");
         /* vm.prank(L1CrossDomainMessengerProxyAddress); */
         vm.prank(address(standardBridge.MESSENGER()));
-        /* vm.expectRevert("StandardBridge: paused"); */
+        vm.expectRevert("StandardBridge: paused");
         standardBridge.finalizeBridgeERC20(_localToken, _remoteToken, _from, _to, _amount, _extraData);
     }
 }
