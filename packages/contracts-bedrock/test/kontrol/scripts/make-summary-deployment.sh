@@ -26,7 +26,7 @@ cp ${DEPLOY_SCRIPT} ${DEPLOY_SCRIPT}.bak
 # of the system are deployed, we'd get some reverts on the `mustGetAddress` functions
 awk '{gsub(/mustGetAddress/, "getAddress")}1' ${DEPLOY_SCRIPT} > temp && mv temp ${DEPLOY_SCRIPT}
 
-FOUNDRY_PROFILE=kdeploy forge script -vvv test/kontrol/KontrolDeployment.sol:KontrolDeployment --sig 'runKontrolDeployment()'
+FOUNDRY_PROFILE=kdeploy forge script -vvv test/kontrol/deployment/KontrolDeployment.sol:KontrolDeployment --sig 'runKontrolDeployment()'
 echo "Created state diff json"
 
 # Restore the file from the backup
@@ -47,7 +47,8 @@ CONTRACT_NAMES=${CONTRACT_NAMES}Reversed
 
 SUMMARY_DIR=test/kontrol/proofs/utils
 SUMMARY_NAME=DeploymentSummary
-kontrol summary ${SUMMARY_NAME} snapshots/state-diff/${STATEDIFF} --contract-names ${CONTRACT_NAMES} --output-dir ${SUMMARY_DIR}
+LICENSE=MIT
+kontrol summary ${SUMMARY_NAME} snapshots/state-diff/${STATEDIFF} --contract-names ${CONTRACT_NAMES} --output-dir ${SUMMARY_DIR} --license ${LICENSE}
 forge fmt ${SUMMARY_DIR}/${SUMMARY_NAME}.sol
 forge fmt ${SUMMARY_DIR}/${SUMMARY_NAME}Code.sol
 echo "Added state updates to ${SUMMARY_DIR}/${SUMMARY_NAME}.sol"

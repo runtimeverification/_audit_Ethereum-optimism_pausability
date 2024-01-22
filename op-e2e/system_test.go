@@ -161,7 +161,7 @@ func TestSystemE2EDencunAtGenesis(t *testing.T) {
 	InitParallel(t)
 
 	cfg := DefaultSystemConfig(t)
-	genesisActivation := uint64(0)
+	genesisActivation := hexutil.Uint64(0)
 	cfg.DeployConfig.L1CancunTimeOffset = &genesisActivation
 
 	sys, err := cfg.Start(t)
@@ -179,7 +179,7 @@ func TestSystemE2EDencunAtGenesisWithBlobs(t *testing.T) {
 
 	cfg := DefaultSystemConfig(t)
 	//cancun is on from genesis:
-	genesisActivation := uint64(0)
+	genesisActivation := hexutil.Uint64(0)
 	cfg.DeployConfig.L1CancunTimeOffset = &genesisActivation // i.e. turn cancun on at genesis time + 0
 
 	sys, err := cfg.Start(t)
@@ -188,7 +188,7 @@ func TestSystemE2EDencunAtGenesisWithBlobs(t *testing.T) {
 
 	// send a blob-containing txn on l1
 	ethPrivKey := sys.Cfg.Secrets.Alice
-	txData := transactions.CreateEmptyBlobTx(ethPrivKey, true, sys.Cfg.L1ChainIDBig().Uint64())
+	txData := transactions.CreateEmptyBlobTx(true, sys.Cfg.L1ChainIDBig().Uint64())
 	tx := types.MustSignNewTx(ethPrivKey, types.LatestSignerForChainID(cfg.L1ChainIDBig()), txData)
 	// send blob-containing txn
 	sendCtx, sendCancel := context.WithTimeout(context.Background(), 15*time.Second)
@@ -545,11 +545,11 @@ func TestSystemMockP2P(t *testing.T) {
 
 	var published, received []common.Hash
 	seqTracer, verifTracer := new(FnTracer), new(FnTracer)
-	seqTracer.OnPublishL2PayloadFn = func(ctx context.Context, payload *eth.ExecutionPayload) {
-		published = append(published, payload.BlockHash)
+	seqTracer.OnPublishL2PayloadFn = func(ctx context.Context, payload *eth.ExecutionPayloadEnvelope) {
+		published = append(published, payload.ExecutionPayload.BlockHash)
 	}
-	verifTracer.OnUnsafeL2PayloadFn = func(ctx context.Context, from peer.ID, payload *eth.ExecutionPayload) {
-		received = append(received, payload.BlockHash)
+	verifTracer.OnUnsafeL2PayloadFn = func(ctx context.Context, from peer.ID, payload *eth.ExecutionPayloadEnvelope) {
+		received = append(received, payload.ExecutionPayload.BlockHash)
 	}
 	cfg.Nodes["sequencer"].Tracer = seqTracer
 	cfg.Nodes["verifier"].Tracer = verifTracer
@@ -646,8 +646,8 @@ func TestSystemP2PAltSync(t *testing.T) {
 	var published []string
 	seqTracer := new(FnTracer)
 	// The sequencer still publishes the blocks to the tracer, even if they do not reach the network due to disabled P2P
-	seqTracer.OnPublishL2PayloadFn = func(ctx context.Context, payload *eth.ExecutionPayload) {
-		published = append(published, payload.ID().String())
+	seqTracer.OnPublishL2PayloadFn = func(ctx context.Context, payload *eth.ExecutionPayloadEnvelope) {
+		published = append(published, payload.ExecutionPayload.ID().String())
 	}
 	// Blocks are now received via the RPC based alt-sync method
 	cfg.Nodes["sequencer"].Tracer = seqTracer
@@ -700,8 +700,8 @@ func TestSystemP2PAltSync(t *testing.T) {
 		Pprof:               oppprof.CLIConfig{},
 		L1EpochPollInterval: time.Second * 10,
 		Tracer: &FnTracer{
-			OnUnsafeL2PayloadFn: func(ctx context.Context, from peer.ID, payload *eth.ExecutionPayload) {
-				syncedPayloads = append(syncedPayloads, payload.ID().String())
+			OnUnsafeL2PayloadFn: func(ctx context.Context, from peer.ID, payload *eth.ExecutionPayloadEnvelope) {
+				syncedPayloads = append(syncedPayloads, payload.ExecutionPayload.ID().String())
 			},
 		},
 	}
@@ -790,17 +790,17 @@ func TestSystemDenseTopology(t *testing.T) {
 
 	var published, received1, received2, received3 []common.Hash
 	seqTracer, verifTracer, verifTracer2, verifTracer3 := new(FnTracer), new(FnTracer), new(FnTracer), new(FnTracer)
-	seqTracer.OnPublishL2PayloadFn = func(ctx context.Context, payload *eth.ExecutionPayload) {
-		published = append(published, payload.BlockHash)
+	seqTracer.OnPublishL2PayloadFn = func(ctx context.Context, payload *eth.ExecutionPayloadEnvelope) {
+		published = append(published, payload.ExecutionPayload.BlockHash)
 	}
-	verifTracer.OnUnsafeL2PayloadFn = func(ctx context.Context, from peer.ID, payload *eth.ExecutionPayload) {
-		received1 = append(received1, payload.BlockHash)
+	verifTracer.OnUnsafeL2PayloadFn = func(ctx context.Context, from peer.ID, payload *eth.ExecutionPayloadEnvelope) {
+		received1 = append(received1, payload.ExecutionPayload.BlockHash)
 	}
-	verifTracer2.OnUnsafeL2PayloadFn = func(ctx context.Context, from peer.ID, payload *eth.ExecutionPayload) {
-		received2 = append(received2, payload.BlockHash)
+	verifTracer2.OnUnsafeL2PayloadFn = func(ctx context.Context, from peer.ID, payload *eth.ExecutionPayloadEnvelope) {
+		received2 = append(received2, payload.ExecutionPayload.BlockHash)
 	}
-	verifTracer3.OnUnsafeL2PayloadFn = func(ctx context.Context, from peer.ID, payload *eth.ExecutionPayload) {
-		received3 = append(received3, payload.BlockHash)
+	verifTracer3.OnUnsafeL2PayloadFn = func(ctx context.Context, from peer.ID, payload *eth.ExecutionPayloadEnvelope) {
+		received3 = append(received3, payload.ExecutionPayload.BlockHash)
 	}
 	cfg.Nodes["sequencer"].Tracer = seqTracer
 	cfg.Nodes["verifier"].Tracer = verifTracer
@@ -1070,10 +1070,39 @@ func (sga *stateGetterAdapter) GetState(addr common.Address, key common.Hash) co
 func TestFees(t *testing.T) {
 	InitParallel(t)
 
-	cfg := DefaultSystemConfig(t)
-	// This test only works with these config values modified
-	cfg.DeployConfig.L2GenesisRegolithTimeOffset = nil
-	cfg.DeployConfig.L1GenesisBlockBaseFeePerGas = (*hexutil.Big)(big.NewInt(7))
+	t.Run("pre-regolith", func(t *testing.T) {
+		cfg := DefaultSystemConfig(t)
+		cfg.DeployConfig.L1GenesisBlockBaseFeePerGas = (*hexutil.Big)(big.NewInt(7))
+
+		cfg.DeployConfig.L2GenesisRegolithTimeOffset = nil
+		cfg.DeployConfig.L2GenesisCanyonTimeOffset = nil
+		cfg.DeployConfig.L2GenesisDeltaTimeOffset = nil
+		cfg.DeployConfig.L2GenesisEcotoneTimeOffset = nil
+		testFees(t, cfg)
+	})
+	t.Run("regolith", func(t *testing.T) {
+		cfg := DefaultSystemConfig(t)
+		cfg.DeployConfig.L1GenesisBlockBaseFeePerGas = (*hexutil.Big)(big.NewInt(7))
+
+		cfg.DeployConfig.L2GenesisRegolithTimeOffset = new(hexutil.Uint64)
+		cfg.DeployConfig.L2GenesisCanyonTimeOffset = nil
+		cfg.DeployConfig.L2GenesisDeltaTimeOffset = nil
+		cfg.DeployConfig.L2GenesisEcotoneTimeOffset = nil
+		testFees(t, cfg)
+	})
+	t.Run("ecotone", func(t *testing.T) {
+		cfg := DefaultSystemConfig(t)
+		cfg.DeployConfig.L1GenesisBlockBaseFeePerGas = (*hexutil.Big)(big.NewInt(7))
+
+		cfg.DeployConfig.L2GenesisRegolithTimeOffset = new(hexutil.Uint64)
+		cfg.DeployConfig.L2GenesisCanyonTimeOffset = new(hexutil.Uint64)
+		cfg.DeployConfig.L2GenesisDeltaTimeOffset = new(hexutil.Uint64)
+		cfg.DeployConfig.L2GenesisEcotoneTimeOffset = new(hexutil.Uint64)
+		testFees(t, cfg)
+	})
+}
+
+func testFees(t *testing.T, cfg SystemConfig) {
 
 	sys, err := cfg.Start(t)
 	require.Nil(t, err, "Error starting up system")
@@ -1083,13 +1112,7 @@ func TestFees(t *testing.T) {
 	l2Verif := sys.Clients["verifier"]
 	l1 := sys.Clients["l1"]
 
-	config := &params.ChainConfig{
-		Optimism: &params.OptimismConfig{
-			EIP1559Elasticity:  cfg.DeployConfig.EIP1559Elasticity,
-			EIP1559Denominator: cfg.DeployConfig.EIP1559Denominator,
-		},
-		BedrockBlock: big.NewInt(0),
-	}
+	config := sys.L2Genesis().Config
 
 	sga := &stateGetterAdapter{
 		ctx:    context.Background(),
@@ -1110,16 +1133,25 @@ func TestFees(t *testing.T) {
 	gpoContract, err := bindings.NewGasPriceOracle(predeploys.GasPriceOracleAddr, l2Seq)
 	require.Nil(t, err)
 
-	overhead, err := gpoContract.Overhead(&bind.CallOpts{})
-	require.Nil(t, err, "reading gpo overhead")
+	if !sys.RollupConfig.IsEcotone(sys.L2GenesisCfg.Timestamp) {
+		overhead, err := gpoContract.Overhead(&bind.CallOpts{})
+		require.Nil(t, err, "reading gpo overhead")
+		require.Equal(t, overhead.Uint64(), cfg.DeployConfig.GasPriceOracleOverhead, "wrong gpo overhead")
+
+		scalar, err := gpoContract.Scalar(&bind.CallOpts{})
+		require.Nil(t, err, "reading gpo scalar")
+		require.Equal(t, scalar.Uint64(), cfg.DeployConfig.GasPriceOracleScalar, "wrong gpo scalar")
+	} else {
+		_, err := gpoContract.Overhead(&bind.CallOpts{})
+		require.ErrorContains(t, err, "deprecated")
+		_, err = gpoContract.Scalar(&bind.CallOpts{})
+		require.ErrorContains(t, err, "deprecated")
+	}
+
 	decimals, err := gpoContract.Decimals(&bind.CallOpts{})
 	require.Nil(t, err, "reading gpo decimals")
-	scalar, err := gpoContract.Scalar(&bind.CallOpts{})
-	require.Nil(t, err, "reading gpo scalar")
 
-	require.Equal(t, overhead.Uint64(), cfg.DeployConfig.GasPriceOracleOverhead, "wrong gpo overhead")
 	require.Equal(t, decimals.Uint64(), uint64(6), "wrong gpo decimals")
-	require.Equal(t, scalar.Uint64(), cfg.DeployConfig.GasPriceOracleScalar, "wrong gpo scalar")
 
 	// BaseFee Recipient
 	baseFeeRecipientStartBalance, err := l2Seq.BalanceAt(context.Background(), predeploys.BaseFeeVaultAddr, big.NewInt(rpc.EarliestBlockNumber.Int64()))
@@ -1202,17 +1234,32 @@ func TestFees(t *testing.T) {
 	l1Fee := l1CostFn(tx.RollupCostData(), header.Time)
 	require.Equalf(t, l1Fee, l1FeeRecipientDiff, "L1 fee mismatch: start balance %v, end balance %v", l1FeeRecipientStartBalance, l1FeeRecipientEndBalance)
 
+	gpoEcotone, err := gpoContract.IsEcotone(nil)
+	require.NoError(t, err)
+	require.Equal(t, sys.RollupConfig.IsEcotone(header.Time), gpoEcotone, "GPO and chain must have same ecotone view")
+
 	gpoL1Fee, err := gpoContract.GetL1Fee(&bind.CallOpts{}, bytes)
 	require.Nil(t, err)
-	require.Equal(t, l1Fee, gpoL1Fee, "GPO reports L1 fee mismatch")
+
+	adjustedGPOFee := gpoL1Fee
+	if sys.RollupConfig.IsRegolith(header.Time) {
+		// if post-regolith, adjust the GPO fee by removing the overhead it adds because of signature data
+		artificialGPOOverhead := big.NewInt(68 * 16) // it adds 68 bytes to cover signature and RLP data
+		l1BaseFee := big.NewInt(7)                   // we assume the L1 basefee is the minimum, 7
+		// in our case we already include that, so we subtract it, to do a 1:1 comparison
+		adjustedGPOFee = new(big.Int).Sub(gpoL1Fee, new(big.Int).Mul(artificialGPOOverhead, l1BaseFee))
+	}
+	require.Equal(t, l1Fee, adjustedGPOFee, "GPO reports L1 fee mismatch")
 
 	require.Equal(t, receipt.L1Fee, l1Fee, "l1 fee in receipt is correct")
-	require.Equal(t,
-		new(big.Float).Mul(
-			new(big.Float).SetInt(l1Header.BaseFee),
-			new(big.Float).Mul(new(big.Float).SetInt(receipt.L1GasUsed), receipt.FeeScalar),
-		),
-		new(big.Float).SetInt(receipt.L1Fee), "fee field in receipt matches gas used times scalar times base fee")
+	if !sys.RollupConfig.IsEcotone(header.Time) { // FeeScalar receipt attribute is removed as of Ecotone
+		require.Equal(t,
+			new(big.Float).Mul(
+				new(big.Float).SetInt(l1Header.BaseFee),
+				new(big.Float).Mul(new(big.Float).SetInt(receipt.L1GasUsed), receipt.FeeScalar),
+			),
+			new(big.Float).SetInt(receipt.L1Fee), "fee field in receipt matches gas used times scalar times base fee")
+	}
 
 	// Calculate total fee
 	baseFeeRecipientDiff.Add(baseFeeRecipientDiff, coinbaseDiff)

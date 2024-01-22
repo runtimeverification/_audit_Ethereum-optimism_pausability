@@ -45,6 +45,7 @@ import "src/libraries/DisputeTypes.sol";
 import { ChainAssertions } from "scripts/ChainAssertions.sol";
 import { Types } from "scripts/Types.sol";
 import { LibStateDiff } from "scripts/libraries/LibStateDiff.sol";
+import { EIP1967Helper } from "test/mocks/EIP1967Helper.sol";
 
 /// @title Deploy
 /// @notice Script used to deploy a bedrock system. The entire system is deployed within the `run` function.
@@ -115,7 +116,7 @@ contract Deploy is Deployer {
     /// @notice The create2 salt used for deployment of the contract implementations.
     ///         Using this helps to reduce config across networks as the implementation
     ///         addresses will be the same across networks when deployed with create2.
-    function _implSalt() internal returns (bytes32) {
+    function _implSalt() internal view returns (bytes32) {
         return keccak256(bytes(vm.envOr("IMPL_SALT", string("ethers phoenix"))));
     }
 
@@ -408,8 +409,7 @@ contract Deploy is Deployer {
         address proxyAdmin = mustGetAddress("ProxyAdmin");
         L1ChugSplashProxy proxy = new L1ChugSplashProxy(proxyAdmin);
 
-        address admin = address(uint160(uint256(vm.load(address(proxy), OWNER_KEY))));
-        require(admin == proxyAdmin);
+        require(EIP1967Helper.getAdmin(address(proxy)) == proxyAdmin);
 
         save("L1StandardBridgeProxy", address(proxy));
         console.log("L1StandardBridgeProxy deployed at %s", address(proxy));
@@ -433,8 +433,7 @@ contract Deploy is Deployer {
         address proxyAdmin = mustGetAddress("ProxyAdmin");
         Proxy proxy = new Proxy({ _admin: proxyAdmin });
 
-        address admin = address(uint160(uint256(vm.load(address(proxy), OWNER_KEY))));
-        require(admin == proxyAdmin);
+        require(EIP1967Helper.getAdmin(address(proxy)) == proxyAdmin);
 
         save(_name, address(proxy));
         console.log("   at %s", address(proxy));
@@ -584,7 +583,10 @@ contract Deploy is Deployer {
     /// @notice Deploy the PreimageOracle
     function deployPreimageOracle() public onlyTestnetOrDevnet broadcast returns (address addr_) {
         console.log("Deploying PreimageOracle implementation");
-        PreimageOracle preimageOracle = new PreimageOracle{ salt: _implSalt() }();
+        PreimageOracle preimageOracle = new PreimageOracle{ salt: _implSalt() }({
+            _minProposalSize: cfg.preimageOracleMinProposalSize(),
+            _challengePeriod: cfg.preimageOracleChallengePeriod()
+        });
         save("PreimageOracle", address(preimageOracle));
         console.log("PreimageOracle deployed at %s", address(preimageOracle));
 

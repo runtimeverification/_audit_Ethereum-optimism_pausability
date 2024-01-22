@@ -11,6 +11,7 @@
 [g-deposit-contract]: glossary.md#deposit-contract
 [g-deposited]: glossary.md#deposited-transaction
 [g-l1-attr-deposit]: glossary.md#l1-attributes-deposited-transaction
+[g-l1-origin]: glossary.md#l1-origin
 [g-user-deposited]: glossary.md#user-deposited-transaction
 [g-deposits]: glossary.md#deposits
 [g-deposit-contract]: glossary.md#deposit-contract
@@ -113,7 +114,7 @@ check on sequencing, and enables detecting L1 chain [re-organizations][g-reorg])
 The L2 chain is derived from the L1 chain. In particular, each L1 block following [L2 chain
 inception][g-l2-chain-inception] is mapped to a [sequencing epoch][g-sequencing-epoch] comprising
 at least one L2 block. Each L2 block belongs to exactly one epoch, and we call the corresponding L1
-block its [L1 origin][l1-origin]. The epoch's number equals that of its L1 origin block.
+block its [L1 origin][g-l1-origin]. The epoch's number equals that of its L1 origin block.
 
 To derive the L2 blocks of epoch number `E`, we need the following inputs:
 
@@ -132,7 +133,7 @@ To derive the L2 blocks of epoch number `E`, we need the following inputs:
   if `E` is the first epoch.
 
 To derive the whole L2 chain from scratch, we start with the [L2 genesis state][g-l2-genesis] and
-the [L2 genesis block] as the first L2 block. We then derive L2 blocks from each epoch in order,
+the [L2 genesis block][g-l2-genesis-block] as the first L2 block. We then derive L2 blocks from each epoch in order,
 starting at the first L1 block following [L2 chain inception][g-l2-chain-inception]. Refer to the
 [Architecture section][architecture] for more information on how we implement this in practice.
 The L2 chain may contain pre-Bedrock history, but the L2 genesis here refers to the Bedrock L2
@@ -510,7 +511,7 @@ transaction is a blob transaction, then its calldata MUST be ignored should it b
     recommended.  For each retrieved blob:
   - The blob SHOULD (MUST, if the source is untrusted) be cryptographically verified against its
     versioned hash.
-  - If the blob has a [valid encoding][#blob-encoding], decode it into its continuous byte-string
+  - If the blob has a [valid encoding](#blob-encoding), decode it into its continuous byte-string
     and pass that on to the next phase. Otherwise the blob is ignored.
 
 Note that batcher transactions of type blob must be processed in the same loop as other batcher
@@ -875,11 +876,17 @@ safe head.
 
 The following fields of the derived L2 payload attributes are checked for equality with the L2 block:
 
-- `parent_hash`
-- `timestamp`
-- `randao`
-- `fee_recipient`
-- `transactions_list` (first length, then equality of each of the encoded transactions, including deposits)
+- Bedrock, Canyon, Delta, Ecotone Blocks
+  - `parent_hash`
+  - `timestamp`
+  - `randao`
+  - `fee_recipient`
+  - `transactions_list` (first length, then equality of each of the encoded transactions, including deposits)
+  - `gas_limit`
+- Canyon, Delta, Ecotone Blocks
+  - `withdrawals` (first presence, then length, then equality of each of the encoded withdrawals)
+- Ecotone Blocks
+  - `parent_beacon_block_root`
 
 If consolidation succeeds, the forkchoice change will synchronize as described in the section above.
 
@@ -1123,8 +1130,8 @@ A deposit transaction is derived with the following attributes:
 - `to`: `null`
 - `mint`: `0`
 - `value`: `0`
-- `gasLimit`: `300,000` (TBC)
-- `data`: L1Block deploy bytecode (TBC when PR for contracts is merged)
+- `gasLimit`: `375,000`
+- `data`: `0x60806040523480156100105...` ([full bytecode](./bytecode/ecotone-l1-block-deployment.txt))
 - `sourceHash`: `0x877a6077205782ea15a6dc8699fa5ebcec5e0f4389f09cb8eda09488231346f8`,
   computed with the "Upgrade-deposited" type, with `intent = "Ecotone: L1 Block Deployment"
 
@@ -1142,6 +1149,17 @@ cast keccak $(cast concat-hex 0x000000000000000000000000000000000000000000000000
 # 0x877a6077205782ea15a6dc8699fa5ebcec5e0f4389f09cb8eda09488231346f8
 ```
 
+Verify `data`:
+
+```bash
+git checkout 5996d0bc1a4721f2169ba4366a014532f31ea932
+pnpm clean && pnpm install && pnpm build
+jq -r ".bytecode.object" packages/contracts-bedrock/forge-artifacts/L1Block.sol/L1Block.json
+```
+
+This transaction MUST deploy a contract with the following code hash
+`0xc88a313aa75dc4fbf0b6850d9f9ae41e04243b7008cf3eadb29256d4a71c1dfd`.
+
 ##### GasPriceOracle Deployment
 
 The `GasPriceOracle` contract is upgraded to support the new Ecotone L1-data-fee parameters. Post fork this contract
@@ -1153,8 +1171,8 @@ A deposit transaction is derived with the following attributes:
 - `to`: `null`,
 - `mint`: `0`
 - `value`: `0`
-- `gasLimit`: `500,000` (TBC)
-- `data`: GasPriceOracle deploy bytecode (TBC when PR for contracts is merged)
+- `gasLimit`: `1,000,000`
+- `data`: `0x60806040523480156100...` ([full bytecode](./bytecode/ecotone-gas-price-oracle-deployment.txt))
 - `sourceHash`: `0xa312b4510adf943510f05fcc8f15f86995a5066bd83ce11384688ae20e6ecf42`
   computed with the "Upgrade-deposited" type, with `intent = "Ecotone: Gas Price Oracle Deployment"
 
@@ -1173,6 +1191,17 @@ Verify `sourceHash`:
 # 0xa312b4510adf943510f05fcc8f15f86995a5066bd83ce11384688ae20e6ecf42
 ```
 
+Verify `data`:
+
+```bash
+git checkout 5996d0bc1a4721f2169ba4366a014532f31ea932
+pnpm clean && pnpm install && pnpm build
+jq -r ".bytecode.object" packages/contracts-bedrock/forge-artifacts/GasPriceOracle.sol/GasPriceOracle.json
+```
+
+This transaction MUST deploy a contract with the following code hash
+`0x8b71360ea773b4cfaf1ae6d2bd15464a4e1e2e360f786e475f63aeaed8da0ae5`.
+
 ##### L1Block Proxy Update
 
 This transaction updates the L1Block Proxy ERC-1967 implementation slot to point to the new L1Block deployment.
@@ -1183,7 +1212,7 @@ A deposit transaction is derived with the following attributes:
 - `to`: `0x4200000000000000000000000000000000000015` (L1Block Proxy)
 - `mint`: `0`
 - `value`: `0`
-- `gasLimit`: `200,000` (TBC)
+- `gasLimit`: `50,000`
 - `data`: `0x3659cfe600000000000000000000000007dbe8500fc591d1852b76fee44d5a05e13097ff`
 - `sourceHash`: `0x18acb38c5ff1c238a7460ebc1b421fa49ec4874bdf1e0a530d234104e5e67dbc`
   computed with the "Upgrade-deposited" type, with `intent = "Ecotone: L1 Block Proxy Update"
@@ -1213,7 +1242,7 @@ A deposit transaction is derived with the following attributes:
 - `to`: `0x420000000000000000000000000000000000000F` (Gas Price Oracle Proxy)
 - `mint`: `0`
 - `value`: `0`
-- `gasLimit`: `200,000` (TBC)
+- `gasLimit`: `50,000`
 - `data`: `0x3659cfe6000000000000000000000000b528d11cc114e026f138fe568744c6d45ce6da7a`
 - `sourceHash`: `0xee4f9385eceef498af0be7ec5862229f426dec41c8d42397c7257a5117d9230a`
   computed with the "Upgrade-deposited" type, with `intent = "Ecotone: Gas Price Oracle Proxy Update"`
@@ -1242,7 +1271,7 @@ A deposit transaction is derived with the following attributes:
 - `to`: `0x420000000000000000000000000000000000000F` (Gas Price Oracle Proxy)
 - `mint`: `0`
 - `value`: `0`
-- `gasLimit`: `1,000,000` (TBC)
+- `gasLimit`: `80,000`
 - `data`: `0x22b90ab3`
 - `sourceHash`: `0x0c1cb38e99dbc9cbfab3bb80863380b0905290b37eb3d6ab18dc01c1f3e75f93`,
   computed with the "Upgrade-deposited" type, with `intent = "Ecotone: Gas Price Oracle Set Ecotone"

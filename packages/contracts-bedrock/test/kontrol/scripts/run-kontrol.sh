@@ -31,7 +31,7 @@ blank_line
 
 export FOUNDRY_PROFILE=kprove
 export CONTAINER_NAME=kontrol-tests
-KONTROLRC=$(cat "${WORKSPACE_DIR}/../../.kontrolrc")
+KONTROLRC=$(jq -r .kontrol < "${WORKSPACE_DIR}/../../versions.json")
 export KONTROL_RELEASE=${KONTROLRC}
 export LOCAL=false
 
@@ -50,7 +50,7 @@ else
     usage
   elif [ "$1" == "local" ]; then
     notif "Running with LOCAL install, .kontrolrc CI version ENFORCED"
-    if [ "$(kontrol version | awk -F':' '{print$2}')" == "${KONTROLRC}" ]; then
+    if [ "$(kontrol version | awk -F': ' '{print$2}')" == "${KONTROLRC}" ]; then
       notif "Kontrol version matches ${KONTROLRC}"
       blank_line
       export LOCAL=true
@@ -94,14 +94,14 @@ kontrol_prove() {
                         --max-depth ${max_depth}           \
                         --max-iterations ${max_iterations} \
                         --smt-timeout ${smt_timeout}       \
-                        --bmc-depth ${bmc_depth}           \
                         --workers ${workers}               \
                         ${reinit}                          \
                         ${bug_report}                      \
                         ${break_on_calls}                  \
                         ${auto_abstract}                   \
                         ${tests}                           \
-                        ${use_booster}
+                        ${use_booster}                     \
+                        --init-node-from ${state_diff}
 }
 
 start_docker () {
@@ -208,7 +208,6 @@ regen=
 max_depth=1000000
 max_iterations=1000000
 smt_timeout=100000
-bmc_depth=10
 workers=1
 reinit=--reinit
 reinit=
@@ -220,14 +219,14 @@ bug_report=--bug-report
 bug_report=
 use_booster=--use-booster
 # use_booster=
+state_diff="./snapshots/state-diff/Kontrol-Deploy.json"
 
 #########################################
 # List of tests to symbolically execute #
 #########################################
 tests=""
-tests+="--match-test CounterTest.test_SetNumber "
 #tests+="--match-test OptimismPortalKontrol.prove_proveWithdrawalTransaction_paused "
-#tests+="--match-test OptimismPortalKontrol.prove_finalizeWithdrawalTransaction_paused "
+tests+="--match-test OptimismPortalKontrol.prove_finalizeWithdrawalTransaction_paused "
 
 #############
 # RUN TESTS #

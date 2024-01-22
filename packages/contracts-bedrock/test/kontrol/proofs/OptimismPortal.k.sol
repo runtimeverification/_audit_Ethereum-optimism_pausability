@@ -13,8 +13,9 @@ contract OptimismPortalKontrol is DeploymentSummary, KontrolUtils {
     OptimismPortal optimismPortal;
     SuperchainConfig superchainConfig;
 
-    function setUp() public {
-        recreateDeployment();
+    /// @dev Inlined setUp function for faster Kontrol performance
+    ///      Tracking issue: https://github.com/runtimeverification/kontrol/issues/282
+    function setUpInlined() public {
         optimismPortal = OptimismPortal(payable(OptimismPortalProxyAddress));
         superchainConfig = SuperchainConfig(SuperchainConfigProxyAddress);
     }
@@ -39,6 +40,7 @@ contract OptimismPortalKontrol is DeploymentSummary, KontrolUtils {
     )
         external
     {
+        setUpInlined();
         bytes memory _data = freshBigBytes(320);
 
         bytes[] memory _withdrawalProof = freshWithdrawalProof();
@@ -56,7 +58,7 @@ contract OptimismPortalKontrol is DeploymentSummary, KontrolUtils {
         superchainConfig.pause("identifier");
 
         // Portal is now paused
-        require(optimismPortal.paused() == true, "Portal should be paused");
+        require(optimismPortal.paused(), "Portal should be paused");
 
         // No one can call proveWithdrawalTransaction
         vm.expectRevert("OptimismPortal: paused");
@@ -75,6 +77,7 @@ contract OptimismPortalKontrol is DeploymentSummary, KontrolUtils {
     )
         external
     {
+        setUpInlined();
         bytes memory _data = freshBigBytes(320);
 
         Types.WithdrawalTransaction memory _tx =
@@ -88,7 +91,7 @@ contract OptimismPortalKontrol is DeploymentSummary, KontrolUtils {
         superchainConfig.pause("identifier");
 
         // Portal is now paused
-        require(optimismPortal.paused() == true, "Portal should be paused");
+        require(optimismPortal.paused(), "Portal should be paused");
 
         vm.expectRevert("OptimismPortal: paused");
         optimismPortal.finalizeWithdrawalTransaction(_tx);

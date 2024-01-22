@@ -24,8 +24,8 @@ require (
 	github.com/holiman/uint256 v1.2.3
 	github.com/ipfs/go-datastore v0.6.0
 	github.com/ipfs/go-ds-leveldb v0.5.0
-	github.com/jackc/pgtype v1.14.0
-	github.com/jackc/pgx/v5 v5.5.1
+	github.com/jackc/pgtype v1.14.1
+	github.com/jackc/pgx/v5 v5.5.2
 	github.com/libp2p/go-libp2p v0.32.0
 	github.com/libp2p/go-libp2p-mplex v0.9.0
 	github.com/libp2p/go-libp2p-pubsub v0.10.0
@@ -219,7 +219,7 @@ require (
 	rsc.io/tmplfunc v0.0.3 // indirect
 )
 
-replace github.com/ethereum/go-ethereum v1.13.5 => github.com/ethereum-optimism/op-geth v1.101305.2-rc.2
+replace github.com/ethereum/go-ethereum v1.13.5 => github.com/ethereum-optimism/op-geth v1.101305.2-rc.2.0.20240117002010-d5f142e54a0a
 
 //replace github.com/ethereum-optimism/superchain-registry/superchain => ../superchain-registry/superchain
 //replace github.com/ethereum/go-ethereum v1.13.5 => ../go-ethereum

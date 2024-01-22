@@ -166,7 +166,7 @@ func (g *gasPricer) feesForEpoch(epoch int64) (*big.Int, *big.Int, uint64) {
 	return epochGasTipCap, epochGasFeeCap, epochExcessBlobGas
 }
 
-func (g *gasPricer) basefee() *big.Int {
+func (g *gasPricer) baseFee() *big.Int {
 	g.mu.Lock()
 	defer g.mu.Unlock()
 	return new(big.Int).Mul(g.baseBaseFee, big.NewInt(g.epoch))
@@ -263,7 +263,7 @@ func (b *mockBackend) HeaderByNumber(ctx context.Context, number *big.Int) (*typ
 	bg := b.g.excessblobgas()
 	return &types.Header{
 		Number:        num,
-		BaseFee:       b.g.basefee(),
+		BaseFee:       b.g.baseFee(),
 		ExcessBlobGas: &bg,
 	}, nil
 }
@@ -275,7 +275,7 @@ func (b *mockBackend) EstimateGas(ctx context.Context, msg ethereum.CallMsg) (ui
 	if msg.GasFeeCap.Cmp(msg.GasTipCap) < 0 {
 		return 0, core.ErrTipAboveFeeCap
 	}
-	return b.g.basefee().Uint64(), nil
+	return b.g.baseFee().Uint64(), nil
 }
 
 func (b *mockBackend) SuggestGasTipCap(ctx context.Context) (*big.Int, error) {
@@ -1022,7 +1022,7 @@ func TestIncreaseGasPrice(t *testing.T) {
 			},
 		},
 		{
-			name: "enforces min bump on only basefee increase",
+			name: "enforces min bump on only base fee increase",
 			run: func(t *testing.T) {
 				tx, newTx := doGasPriceIncrease(t, 100, 1000, 99, 460)
 				require.True(t, newTx.GasFeeCap().Cmp(tx.GasFeeCap()) > 0, "new tx fee cap must be larger")
@@ -1061,7 +1061,7 @@ func TestIncreaseGasPrice(t *testing.T) {
 	}
 }
 
-// TestIncreaseGasPriceLimits asserts that if the L1 basefee & tip remain the
+// TestIncreaseGasPriceLimits asserts that if the L1 base fee & tip remain the
 // same, repeated calls to IncreaseGasPrice eventually hit a limit.
 func TestIncreaseGasPriceLimits(t *testing.T) {
 	t.Run("no-threshold", func(t *testing.T) {
@@ -1094,7 +1094,7 @@ func testIncreaseGasPriceLimit(t *testing.T, lt gasPriceLimitTest) {
 
 	borkedTip := int64(10)
 	borkedFee := int64(45)
-	// simulate 100 excess blobs which yields a 50 wei blob basefee
+	// simulate 100 excess blobs which yields a 50 wei blob base fee
 	borkedExcessBlobGas := uint64(100 * params.BlobTxBlobGasPerBlob)
 	borkedBackend := failingBackend{
 		gasTip:              big.NewInt(borkedTip),
@@ -1227,9 +1227,9 @@ func TestNonceReset(t *testing.T) {
 func TestMinFees(t *testing.T) {
 	for _, tt := range []struct {
 		desc             string
-		minBasefee       *big.Int
+		minBaseFee       *big.Int
 		minTipCap        *big.Int
-		expectMinBasefee bool
+		expectMinBaseFee bool
 		expectMinTipCap  bool
 	}{
 		{
@@ -1237,8 +1237,8 @@ func TestMinFees(t *testing.T) {
 		},
 		{
 			desc:             "high-min-basefee",
-			minBasefee:       big.NewInt(10_000_000),
-			expectMinBasefee: true,
+			minBaseFee:       big.NewInt(10_000_000),
+			expectMinBaseFee: true,
 		},
 		{
 			desc:            "high-min-tipcap",
@@ -1247,14 +1247,14 @@ func TestMinFees(t *testing.T) {
 		},
 		{
 			desc:             "high-mins",
-			minBasefee:       big.NewInt(10_000_000),
+			minBaseFee:       big.NewInt(10_000_000),
 			minTipCap:        big.NewInt(1_000_000),
-			expectMinBasefee: true,
+			expectMinBaseFee: true,
 			expectMinTipCap:  true,
 		},
 		{
 			desc:       "low-min-basefee",
-			minBasefee: big.NewInt(1),
+			minBaseFee: big.NewInt(1),
 		},
 		{
 			desc:      "low-min-tipcap",
@@ -1262,24 +1262,24 @@ func TestMinFees(t *testing.T) {
 		},
 		{
 			desc:       "low-mins",
-			minBasefee: big.NewInt(1),
+			minBaseFee: big.NewInt(1),
 			minTipCap:  big.NewInt(1),
 		},
 	} {
 		t.Run(tt.desc, func(t *testing.T) {
 			require := require.New(t)
 			conf := configWithNumConfs(1)
-			conf.MinBasefee = tt.minBasefee
+			conf.MinBaseFee = tt.minBaseFee
 			conf.MinTipCap = tt.minTipCap
 			h := newTestHarnessWithConfig(t, conf)
 
-			tip, basefee, _, err := h.mgr.suggestGasPriceCaps(context.TODO())
+			tip, baseFee, _, err := h.mgr.suggestGasPriceCaps(context.TODO())
 			require.NoError(err)
 
-			if tt.expectMinBasefee {
-				require.Equal(tt.minBasefee, basefee, "expect suggested basefee to equal MinBasefee")
+			if tt.expectMinBaseFee {
+				require.Equal(tt.minBaseFee, baseFee, "expect suggested base fee to equal MinBaseFee")
 			} else {
-				require.Equal(h.gasPricer.baseBaseFee, basefee, "expect suggested basefee to equal mock basefee")
+				require.Equal(h.gasPricer.baseBaseFee, baseFee, "expect suggested base fee to equal mock base fee")
 			}
 
 			if tt.expectMinTipCap {
@@ -1289,4 +1289,117 @@ func TestMinFees(t *testing.T) {
 			}
 		})
 	}
+}
+
+// TestClose ensures that the tx manager will refuse new work and cancel any in progress
+func TestClose(t *testing.T) {
+	conf := configWithNumConfs(1)
+	conf.SafeAbortNonceTooLowCount = 100
+	h := newTestHarnessWithConfig(t, conf)
+
+	sendingSignal := make(chan struct{})
+
+	// Ensure the manager is not closed
+	require.False(t, h.mgr.closed.Load())
+
+	// sendTx will fail until it is called a retry-number of times
+	called := 0
+	const retries = 4
+	sendTx := func(ctx context.Context, tx *types.Transaction) (err error) {
+		called += 1
+		// sendingSignal is used when the tx begins to be sent
+		if called == 1 {
+			sendingSignal <- struct{}{}
+		}
+		if called%retries == 0 {
+			txHash := tx.Hash()
+			h.backend.mine(&txHash, tx.GasFeeCap(), big.NewInt(1))
+		} else {
+			time.Sleep(10 * time.Millisecond)
+			err = core.ErrNonceTooLow
+		}
+		return
+	}
+	h.backend.setTxSender(sendTx)
+
+	// on the first call, we don't use the sending signal but we still need to drain it
+	go func() {
+		<-sendingSignal
+	}()
+	// demonstrate that a tx is sent, even when it must retry repeatedly
+	ctx := context.Background()
+	_, err := h.mgr.Send(ctx, TxCandidate{
+		To: &common.Address{},
+	})
+	require.NoError(t, err)
+	require.Equal(t, retries, called)
+	called = 0
+	// Ensure the manager is *still* not closed
+	require.False(t, h.mgr.closed.Load())
+
+	// on the second call, we close the manager while the tx is in progress by consuming the sending signal
+	go func() {
+		<-sendingSignal
+		h.mgr.Close()
+	}()
+	// demonstrate that a tx will cancel if it is in progress when the manager is closed
+	_, err = h.mgr.Send(ctx, TxCandidate{
+		To: &common.Address{},
+	})
+	require.ErrorIs(t, ErrClosed, err)
+	// confirm that the tx was canceled before it retried to completion
+	require.Less(t, called, retries)
+	require.True(t, h.mgr.closed.Load())
+	called = 0
+
+	// demonstrate that new calls to Send will also fail when the manager is closed
+	// there should be no need to capture the sending signal here because the manager is already closed and will return immediately
+	_, err = h.mgr.Send(ctx, TxCandidate{
+		To: &common.Address{},
+	})
+	require.ErrorIs(t, ErrClosed, err)
+	// confirm that the tx was canceled before it ever made it to the backend
+	require.Equal(t, 0, called)
+}
+
+// TestCloseWaitingForConfirmation ensures that the tx manager will wait for confirmation of a tx in flight, even when closed
+func TestCloseWaitingForConfirmation(t *testing.T) {
+	// two confirmations required so that we can mine and not yet be fully confirmed
+	conf := configWithNumConfs(2)
+	h := newTestHarnessWithConfig(t, conf)
+
+	// sendDone is a signal that the tx has been sent from the sendTx function
+	sendDone := make(chan struct{})
+	// closeDone is a signal that the txmanager has closed
+	closeDone := make(chan struct{})
+
+	sendTx := func(ctx context.Context, tx *types.Transaction) error {
+		txHash := tx.Hash()
+		h.backend.mine(&txHash, tx.GasFeeCap(), big.NewInt(1))
+		close(sendDone)
+		return nil
+	}
+	h.backend.setTxSender(sendTx)
+
+	// this goroutine will close the manager when the tx sending is complete
+	// the transaction is not yet confirmed, so the manager will wait for confirmation
+	go func() {
+		<-sendDone
+		h.mgr.Close()
+		close(closeDone)
+	}()
+
+	// this goroutine will complete confirmation of the tx when the manager is closed
+	// by forcing this to happen after close, we are able to observe a closing manager waiting for confirmation
+	go func() {
+		<-closeDone
+		h.backend.mine(nil, nil, big.NewInt(1))
+	}()
+
+	ctx := context.Background()
+	_, err := h.mgr.Send(ctx, TxCandidate{
+		To: &common.Address{},
+	})
+	require.True(t, h.mgr.closed.Load())
+	require.NoError(t, err)
 }
