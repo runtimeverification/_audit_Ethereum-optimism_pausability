@@ -14,7 +14,7 @@ contract StandardBridgeKontrol is DeploymentSummary, KontrolUtils {
     SuperchainConfig superchainConfig;
 
     function setUpInlined() public {
-        recreateDeployment();
+        /* recreateDeployment(); */
         standardBridge = StandardBridge(payable(L1StandardBridgeProxyAddress));
         superchainConfig = SuperchainConfig(SuperchainConfigProxyAddress);
     }
@@ -22,13 +22,12 @@ contract StandardBridgeKontrol is DeploymentSummary, KontrolUtils {
     /// TODO: Replace symbolic workarounds with the appropiate
     /// types once Kontrol supports symbolic `bytes` and `bytes[]`
     /// Tracking issue: https://github.com/runtimeverification/kontrol/issues/272
-    function test_finalizeBridgeERC20_paused(
+    function prove_finalizeBridgeERC20_paused(
         address _localToken,
         address _remoteToken,
         address _from,
         address _to,
-        uint256 _amount,
-        bytes calldata _extraData
+        uint256 _amount
     )
         public
     {
@@ -39,7 +38,7 @@ contract StandardBridgeKontrol is DeploymentSummary, KontrolUtils {
         bytes32 value = bytes32(uint256(uint160(address(standardBridge.OTHER_BRIDGE()))));
         /* bytes32 value = bytes32(uint256(uint160(xDomainMsgSenderValue))); */
         vm.store(L1CrossDomainMessengerProxyAddress, slot, value);
-        /* bytes memory _extraData = freshBigBytes(320); */
+        bytes memory _extraData = freshBigBytes(320);
 
         // After deployment, Optimism portal is enabled
         require(standardBridge.paused() == false, "Bridge should not be paused");
@@ -49,10 +48,43 @@ contract StandardBridgeKontrol is DeploymentSummary, KontrolUtils {
         superchainConfig.pause("identifier");
 
         // Bridge is now paused
-        require(standardBridge.paused() == true, "Bridge should be paused");
-        /* vm.prank(L1CrossDomainMessengerProxyAddress); */
-        vm.prank(address(standardBridge.MESSENGER()));
+        require(standardBridge.paused(), "Bridge should be paused");
+        /* vm.startPrank(L1CrossDomainMessengerProxyAddress); */
+        vm.startPrank(address(standardBridge.MESSENGER()));
         vm.expectRevert("StandardBridge: paused");
         standardBridge.finalizeBridgeERC20(_localToken, _remoteToken, _from, _to, _amount, _extraData);
+        vm.stopPrank();
+    }
+
+        /// TODO: Replace symbolic workarounds with the appropiate
+    /// types once Kontrol supports symbolic `bytes` and `bytes[]`
+    /// Tracking issue: https://github.com/runtimeverification/kontrol/issues/272
+    function prove_finalizeBridgeETH_paused(
+                                              address _from,
+                                              address _to,
+                                              uint256 _amount
+    )
+        public
+    {
+        setUpInlined();
+        bytes32 slot = hex"00000000000000000000000000000000000000000000000000000000000000cc";
+        bytes32 value = bytes32(uint256(uint160(address(standardBridge.OTHER_BRIDGE()))));
+        vm.store(L1CrossDomainMessengerProxyAddress, slot, value);
+        bytes memory _extraData = freshBigBytes(320);
+
+        // After deployment, Optimism portal is enabled
+        require(standardBridge.paused() == false, "Bridge should not be paused");
+
+        // Pause Standard Bridge
+        vm.prank(superchainConfig.guardian());
+        superchainConfig.pause("identifier");
+
+        // Bridge is now paused
+        require(standardBridge.paused(), "Bridge should be paused");
+        /* vm.startPrank(L1CrossDomainMessengerProxyAddress); */
+        vm.startPrank(address(standardBridge.MESSENGER()));
+        vm.expectRevert("StandardBridge: paused");
+        standardBridge.finalizeBridgeETH(_from, _to, _amount, _extraData);
+        vm.stopPrank();
     }
 }
