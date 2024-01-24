@@ -72,3 +72,16 @@ interface IL1ERC721Bridge {
     )
         external;
 }
+
+interface IL1CrossDomainMessenger {
+    function relayMessage(
+        uint256 _nonce,
+        address _sender,
+        address _target,
+        uint256 _value,
+        uint256 _minGasLimit,
+        bytes calldata _message
+    )
+        external
+        payable;
+}

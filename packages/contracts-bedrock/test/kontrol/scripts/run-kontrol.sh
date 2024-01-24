@@ -58,7 +58,7 @@ else
       pushd "${WORKSPACE_DIR}" > /dev/null
     else
       notif "Kontrol version does NOT match ${KONTROLRC}"
-      notif "Please run 'kup install kontrol --version ${KONTROLRC}'"
+      notif "Please run 'kup install kontrol --version v${KONTROLRC}'"
       blank_line
       exit 1
     fi
@@ -135,20 +135,26 @@ run () {
 }
 
 dump_log_results(){
-    trap clean_docker ERR
-    RESULTS_LOG="results-$(date +'%Y-%m-%d-%H-%M-%S').tar.gz"
+  trap clean_docker ERR
+    RESULTS_FILE="results-$(date +'%Y-%m-%d-%H-%M-%S').tar.gz"
+    LOG_PATH="test/kontrol/logs"
+    RESULTS_LOG="${LOG_PATH}/${RESULTS_FILE}"
 
-    notif "Generating Results Log: ${RESULTS_LOG}"
+    if [ ! -d ${LOG_PATH} ]; then
+      mkdir ${LOG_PATH}
+    fi
+
+    notif "Generating Results Log: ${LOG_PATH}"
     blank_line
 
     run tar -czvf results.tar.gz kout-proofs/ > /dev/null 2>&1
     if [ "${LOCAL}" = true ]; then
-      cp results.tar.gz "${RESULTS_LOG}"
+      mv results.tar.gz "${RESULTS_LOG}"
     else
       docker cp ${CONTAINER_NAME}:/home/user/workspace/results.tar.gz "${RESULTS_LOG}"
     fi
     if [ -f "${RESULTS_LOG}" ]; then
-      cp "${RESULTS_LOG}" kontrol-results_latest.tar.gz
+      cp "${RESULTS_LOG}" "${LOG_PATH}/kontrol-results_latest.tar.gz"
     else
       notif "Results Log: ${RESULTS_LOG} not found, skipping.."
       blank_line
@@ -160,7 +166,7 @@ dump_log_results(){
       notif "Results Log: ${RESULTS_LOG} generated"
       blank_line
       RUN_LOG="run-kontrol-$(date +'%Y-%m-%d-%H-%M-%S').log"
-      docker logs ${CONTAINER_NAME} > "${RUN_LOG}"
+      docker logs ${CONTAINER_NAME} > "${LOG_PATH}/${RUN_LOG}"
     fi
 }
 
@@ -230,6 +236,7 @@ tests+="--match-test OptimismPortalKontrol.prove_finalizeWithdrawalTransaction_p
 tests+="--match-test StandardBridgeKontrol.prove_finalizeBridgeERC20_paused "
 tests+="--match-test StandardBridgeKontrol.prove_finalizeBridgeETH_paused "
 tests+="--match-test L1ERC721BridgeKontrol.prove_finalizeBridgeERC21_paused "
+tests+="--match-test L1CrossDomainMessengerKontrol.prove_relayMessage_paused "
 
 #############
 # RUN TESTS #

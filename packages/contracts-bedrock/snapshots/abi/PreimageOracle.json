@@ -49,6 +49,11 @@
         "type": "uint256"
       },
       {
+        "internalType": "uint256",
+        "name": "_inputStartBlock",
+        "type": "uint256"
+      },
+      {
         "internalType": "bytes",
         "name": "_input",
         "type": "bytes"
@@ -312,6 +317,24 @@
         "type": "bytes32"
       }
     ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_partOffset",
+        "type": "uint256"
+      },
+      {
+        "internalType": "bytes",
+        "name": "_preimage",
+        "type": "bytes"
+      }
+    ],
+    "name": "loadSha256PreimagePart",
+    "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
   },
@@ -752,6 +775,11 @@
   {
     "inputs": [],
     "name": "TreeSizeOverflow",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "WrongStartingBlock",
     "type": "error"
   }
 ]
