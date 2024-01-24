@@ -15,6 +15,7 @@ contract KontrolDeployment is Deploy {
         deployERC1967Proxy("SystemConfigProxy");
         deployL1StandardBridgeProxy();
         deployL1CrossDomainMessengerProxy();
+        deployERC1967Proxy("L1ERC721BridgeProxy");
         transferAddressManagerOwnership(); // to the ProxyAdmin
 
         // deployImplementations();
@@ -23,10 +24,12 @@ contract KontrolDeployment is Deploy {
         deployL2OutputOracle();
         deploySystemConfig();
         deployL1StandardBridge();
+        deployL1ERC721Bridge();
 
         // initializeImplementations();
         initializeSystemConfig();
         initializeL1StandardBridge();
+        initializeL1ERC721Bridge();
         initializeL1CrossDomainMessenger();
         initializeL2OutputOracle();
         initializeOptimismPortal();
