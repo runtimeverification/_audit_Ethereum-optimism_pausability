@@ -63,12 +63,12 @@ interface IL1ERC721Bridge {
     function OTHER_BRIDGE() external view returns (IStandardBridge);
 
     function finalizeBridgeERC721(
-                                 address _localToken,
-                                 address _remoteToken,
-                                 address _from,
-                                 address _to,
-                                 uint256 _amount,
-                                 bytes calldata _extraData
+        address _localToken,
+        address _remoteToken,
+        address _from,
+        address _to,
+        uint256 _amount,
+        bytes calldata _extraData
     )
         external;
 }

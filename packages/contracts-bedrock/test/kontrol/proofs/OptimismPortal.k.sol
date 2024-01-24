@@ -94,6 +94,8 @@ contract OptimismPortalKontrol is DeploymentSummary, KontrolUtils {
         // require(optimismPortal.paused(), "Portal should be paused");
 
         vm.expectRevert("OptimismPortal: paused");
-        optimismPortal.finalizeWithdrawalTransaction(Types.WithdrawalTransaction(_nonce, _sender, _target, _value, _gasLimit, _data));
+        optimismPortal.finalizeWithdrawalTransaction(
+            Types.WithdrawalTransaction(_nonce, _sender, _target, _value, _gasLimit, _data)
+        );
     }
 }

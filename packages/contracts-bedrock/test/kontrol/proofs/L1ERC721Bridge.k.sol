@@ -6,8 +6,8 @@ import { KontrolUtils } from "./utils/KontrolUtils.sol";
 import { Types } from "src/libraries/Types.sol";
 import {
     IL1ERC721Bridge as L1ERC721Bridge,
-        ISuperchainConfig as SuperchainConfig
-        } from "./interfaces/KontrolInterfaces.sol";
+    ISuperchainConfig as SuperchainConfig
+} from "./interfaces/KontrolInterfaces.sol";
 
 contract L1ERC721BridgeKontrol is DeploymentSummary, KontrolUtils {
     L1ERC721Bridge l1ERC721Bridge;
@@ -19,7 +19,7 @@ contract L1ERC721BridgeKontrol is DeploymentSummary, KontrolUtils {
         superchainConfig = SuperchainConfig(SuperchainConfigProxyAddress);
     }
 
-        /// TODO: Replace symbolic workarounds with the appropiate
+    /// TODO: Replace symbolic workarounds with the appropiate
     /// types once Kontrol supports symbolic `bytes` and `bytes[]`
     /// Tracking issue: https://github.com/runtimeverification/kontrol/issues/272
     function prove_finalizeBridgeERC21_paused(
@@ -32,7 +32,11 @@ contract L1ERC721BridgeKontrol is DeploymentSummary, KontrolUtils {
         public
     {
         setUpInlined();
-        vm.store(L1CrossDomainMessengerProxyAddress, hex"00000000000000000000000000000000000000000000000000000000000000cc", bytes32(uint256(uint160(address(l1ERC721Bridge.OTHER_BRIDGE())))));
+        vm.store(
+            L1CrossDomainMessengerProxyAddress,
+            hex"00000000000000000000000000000000000000000000000000000000000000cc",
+            bytes32(uint256(uint160(address(l1ERC721Bridge.OTHER_BRIDGE()))))
+        );
         bytes memory _extraData = freshBigBytes(320);
 
         // Pause Standard Bridge
