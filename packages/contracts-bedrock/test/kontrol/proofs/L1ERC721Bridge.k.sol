@@ -15,8 +15,8 @@ contract L1ERC721BridgeKontrol is DeploymentSummary, KontrolUtils {
 
     function setUpInlined() public {
         /* recreateDeployment(); */
-        l1ERC721Bridge = L1ERC721Bridge(L1ERC721BridgeProxyAddress);
-        superchainConfig = SuperchainConfig(SuperchainConfigProxyAddress);
+        l1ERC721Bridge = L1ERC721Bridge(l1ERC721BridgeProxyAddress);
+        superchainConfig = SuperchainConfig(superchainConfigProxyAddress);
     }
 
     /// TODO: Replace symbolic workarounds with the appropiate
@@ -33,7 +33,7 @@ contract L1ERC721BridgeKontrol is DeploymentSummary, KontrolUtils {
     {
         setUpInlined();
         vm.store(
-            L1CrossDomainMessengerProxyAddress,
+            l1CrossDomainMessengerProxyAddress,
             hex"00000000000000000000000000000000000000000000000000000000000000cc",
             bytes32(uint256(uint160(address(l1ERC721Bridge.OTHER_BRIDGE()))))
         );

@@ -15,8 +15,8 @@ contract StandardBridgeKontrol is DeploymentSummary, KontrolUtils {
 
     function setUpInlined() public {
         /* recreateDeployment(); */
-        standardBridge = StandardBridge(payable(L1StandardBridgeProxyAddress));
-        superchainConfig = SuperchainConfig(SuperchainConfigProxyAddress);
+        standardBridge = StandardBridge(payable(l1StandardBridgeProxyAddress));
+        superchainConfig = SuperchainConfig(superchainConfigProxyAddress);
     }
 
     /// TODO: Replace symbolic workarounds with the appropiate
@@ -33,7 +33,7 @@ contract StandardBridgeKontrol is DeploymentSummary, KontrolUtils {
     {
         setUpInlined();
         vm.store(
-            L1CrossDomainMessengerProxyAddress,
+            l1CrossDomainMessengerProxyAddress,
             hex"00000000000000000000000000000000000000000000000000000000000000cc",
             bytes32(uint256(uint160(address(standardBridge.OTHER_BRIDGE()))))
         );
@@ -55,7 +55,7 @@ contract StandardBridgeKontrol is DeploymentSummary, KontrolUtils {
     function prove_finalizeBridgeETH_paused(address _from, address _to, uint256 _amount) public {
         setUpInlined();
         vm.store(
-            L1CrossDomainMessengerProxyAddress,
+            l1CrossDomainMessengerProxyAddress,
             hex"00000000000000000000000000000000000000000000000000000000000000cc",
             bytes32(uint256(uint160(address(standardBridge.OTHER_BRIDGE()))))
         );
