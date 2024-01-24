@@ -90,14 +90,14 @@ contract OptimismPortalKontrol is DeploymentSummary, KontrolUtils {
         optimismPortal.finalizeWithdrawalTransaction(_tx);
     }
 
-    /// TODO: symbolic `bytes`
+    /// @custom:length _withdrawalProof: 1,
+    /// @custom:element-length _withdrawalProof: 600,
     function test_symbolic_proveWithdrawalTransaction_paused(
         Types.WithdrawalTransaction memory _tx,
         uint256 _l2OutputIndex,
         Types.OutputRootProof calldata _outputRootProof,
         bytes[] calldata _withdrawalProof
     )
-        /* bytes[] calldata _withdrawalProof */
         external
     {
         /* After deployment, Optimism portal is enabled */
