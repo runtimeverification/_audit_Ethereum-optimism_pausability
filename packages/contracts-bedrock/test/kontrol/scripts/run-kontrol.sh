@@ -229,6 +229,7 @@ tests=""
 tests+="--match-test OptimismPortalKontrol.prove_finalizeWithdrawalTransaction_paused "
 tests+="--match-test StandardBridgeKontrol.prove_finalizeBridgeERC20_paused "
 tests+="--match-test StandardBridgeKontrol.prove_finalizeBridgeETH_paused "
+tests+="--match-test L1ERC721BridgeKontrol.prove_finalizeBridgeERC721_paused "
 
 #############
 # RUN TESTS #
