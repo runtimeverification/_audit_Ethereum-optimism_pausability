@@ -54,3 +54,21 @@ interface IStandardBridge {
 
     function finalizeBridgeETH(address _from, address _to, uint256 _amount, bytes calldata _extraData) external;
 }
+
+interface IL1ERC721Bridge {
+    function paused() external view returns (bool);
+
+    function MESSENGER() external view returns (ICrossDomainMessenger);
+
+    function OTHER_BRIDGE() external view returns (IStandardBridge);
+
+    function finalizeBridgeERC21(
+                                 address _localToken,
+                                 address _remoteToken,
+                                 address _from,
+                                 address _to,
+                                 uint256 _amount,
+                                 bytes calldata _extraData
+    )
+        external;
+}
