@@ -40,8 +40,8 @@ contract L1ERC721BridgeKontrol is DeploymentSummary, KontrolUtils {
         superchainConfig.pause("identifier");
 
         vm.startPrank(address(l1ERC721Bridge.MESSENGER()));
-        vm.expectRevert("StandardBridge: paused");
-        l1ERC721Bridge.finalizeBridgeERC21(_localToken, _remoteToken, _from, _to, _amount, _extraData);
+        vm.expectRevert("L1ERC721Bridge: paused");
+        l1ERC721Bridge.finalizeBridgeERC721(_localToken, _remoteToken, _from, _to, _amount, _extraData);
         vm.stopPrank();
     }
 }
