@@ -5,17 +5,17 @@ import { DeploymentSummary } from "./utils/DeploymentSummary.sol";
 import { KontrolUtils } from "./utils/KontrolUtils.sol";
 import { Types } from "src/libraries/Types.sol";
 import {
-    IStandardBridge as StandardBridge,
+    IL1StandardBridge as L1StandardBridge,
     ISuperchainConfig as SuperchainConfig
 } from "./interfaces/KontrolInterfaces.sol";
 
-contract StandardBridgeKontrol is DeploymentSummary, KontrolUtils {
-    StandardBridge standardBridge;
+contract L1StandardBridgeKontrol is DeploymentSummary, KontrolUtils {
+    L1StandardBridge l1standardBridge;
     SuperchainConfig superchainConfig;
 
     function setUpInlined() public {
         /* recreateDeployment(); */
-        standardBridge = StandardBridge(payable(l1StandardBridgeProxyAddress));
+        l1standardBridge = L1StandardBridge(payable(l1StandardBridgeProxyAddress));
         superchainConfig = SuperchainConfig(superchainConfigProxyAddress);
     }
 
@@ -35,7 +35,7 @@ contract StandardBridgeKontrol is DeploymentSummary, KontrolUtils {
         vm.store(
             l1CrossDomainMessengerProxyAddress,
             hex"00000000000000000000000000000000000000000000000000000000000000cc",
-            bytes32(uint256(uint160(address(standardBridge.OTHER_BRIDGE()))))
+            bytes32(uint256(uint160(address(l1standardBridge.OTHER_BRIDGE()))))
         );
         bytes memory _extraData = freshBigBytes(320);
 
@@ -43,9 +43,9 @@ contract StandardBridgeKontrol is DeploymentSummary, KontrolUtils {
         vm.prank(superchainConfig.guardian());
         superchainConfig.pause("identifier");
 
-        vm.startPrank(address(standardBridge.MESSENGER()));
+        vm.startPrank(address(l1standardBridge.MESSENGER()));
         vm.expectRevert("StandardBridge: paused");
-        standardBridge.finalizeBridgeERC20(_localToken, _remoteToken, _from, _to, _amount, _extraData);
+        l1standardBridge.finalizeBridgeERC20(_localToken, _remoteToken, _from, _to, _amount, _extraData);
         vm.stopPrank();
     }
 
@@ -57,7 +57,7 @@ contract StandardBridgeKontrol is DeploymentSummary, KontrolUtils {
         vm.store(
             l1CrossDomainMessengerProxyAddress,
             hex"00000000000000000000000000000000000000000000000000000000000000cc",
-            bytes32(uint256(uint160(address(standardBridge.OTHER_BRIDGE()))))
+            bytes32(uint256(uint160(address(l1standardBridge.OTHER_BRIDGE()))))
         );
         bytes memory _extraData = freshBigBytes(320);
 
@@ -65,9 +65,9 @@ contract StandardBridgeKontrol is DeploymentSummary, KontrolUtils {
         vm.prank(superchainConfig.guardian());
         superchainConfig.pause("identifier");
 
-        vm.startPrank(address(standardBridge.MESSENGER()));
+        vm.startPrank(address(l1standardBridge.MESSENGER()));
         vm.expectRevert("StandardBridge: paused");
-        standardBridge.finalizeBridgeETH(_from, _to, _amount, _extraData);
+        l1standardBridge.finalizeBridgeETH(_from, _to, _amount, _extraData);
         vm.stopPrank();
     }
 }

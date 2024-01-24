@@ -35,12 +35,12 @@ interface ICrossDomainMessenger {
     function xDomainMessageSender() external view returns (address);
 }
 
-interface IStandardBridge {
+interface IL1StandardBridge {
     function paused() external view returns (bool);
 
     function MESSENGER() external view returns (ICrossDomainMessenger);
 
-    function OTHER_BRIDGE() external view returns (IStandardBridge);
+    function OTHER_BRIDGE() external view returns (IL1StandardBridge);
 
     function finalizeBridgeERC20(
         address _localToken,
@@ -60,7 +60,7 @@ interface IL1ERC721Bridge {
 
     function MESSENGER() external view returns (ICrossDomainMessenger);
 
-    function OTHER_BRIDGE() external view returns (IStandardBridge);
+    function OTHER_BRIDGE() external view returns (IL1StandardBridge);
 
     function finalizeBridgeERC721(
         address _localToken,
