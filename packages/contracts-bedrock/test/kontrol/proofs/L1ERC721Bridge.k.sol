@@ -6,6 +6,7 @@ import { KontrolUtils } from "./utils/KontrolUtils.sol";
 import { Types } from "src/libraries/Types.sol";
 import {
     IL1ERC721Bridge as L1ERC721Bridge,
+    IL1CrossDomainMessenger as CrossDomainMessenger,
     ISuperchainConfig as SuperchainConfig
 } from "./interfaces/KontrolInterfaces.sol";
 
@@ -32,13 +33,10 @@ contract L1ERC721BridgeKontrol is DeploymentSummary, KontrolUtils {
     {
         setUpInlined();
 
-        // Current workaround to be replaced with `vm.mockCall`, once the cheatcode is implemented in Kontrol
-        // This overrides the storage slot read by `CrossDomainMessenger::xDomainMessageSender`
-        // Tracking issue: https://github.com/runtimeverification/kontrol/issues/285
-        vm.store(
-            l1CrossDomainMessengerProxyAddress,
-            hex"00000000000000000000000000000000000000000000000000000000000000cc",
-            bytes32(uint256(uint160(address(l1ERC721Bridge.otherBridge()))))
+        vm.mockCall(
+                    address(l1ERC721Bridge.messenger()),
+                    abi.encodeWithSelector(CrossDomainMessenger.xDomainMessageSender.selector),
+                    abi.encode(address(l1ERC721Bridge.otherBridge()))
         );
 
         // ASSUME: conservative upper bound on the `_extraData` length
