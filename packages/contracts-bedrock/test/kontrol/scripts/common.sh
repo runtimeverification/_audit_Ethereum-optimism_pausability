@@ -177,6 +177,33 @@ copy_to_docker() {
   fi
 }
 
+dump_log_results(){
+    trap clean_docker ERR
+    notif "Generating Results Log: $LOG_PATH"
+
+    run tar -czvf results.tar.gz kout-proofs/ > /dev/null 2>&1
+    if [ "$LOCAL" = true ]; then
+      mv results.tar.gz "$RESULTS_KOUT"
+    else
+      docker cp "$CONTAINER_NAME:/home/user/workspace/results.tar.gz" "$RESULTS_KOUT"
+      # Expand the Results on LOCAL
+      tar -xzvf $RESULTS_KOUT $WORKSPACE_DIR/kout-proofs
+    fi
+    if [ -f "$RESULTS_KOUT" ]; then
+      cp "$RESULTS_KOUT" "$LOG_PATH/kontrol-results_latest.tar.gz"
+    else
+      notif "Results Log: $RESULTS_KOUT not found, skipping.."
+    fi
+    # Report where the file was generated and placed
+    notif "Results Log: $(dirname "$RESULTS_KOUT") generated"
+
+    if [ "$LOCAL" = false ]; then
+      notif "Results Log: $RESULTS_KOUT generated"
+      RUN_LOG="run-kontrol-$(date +'%Y-%m-%d-%H-%M-%S').log"
+      docker logs "$CONTAINER_NAME" > "$LOG_PATH/$RUN_LOG"
+    fi
+}
+
 clean_docker(){
   notif "Stopping Docker Container"
   docker stop "$CONTAINER_NAME"
@@ -196,4 +223,45 @@ run () {
     notif "Running in docker"
     docker_exec "${@}"
   fi
+}
+
+kontrol_build() {
+  notif "Kontrol Build"
+  # shellcheck disable=SC2086
+  run kontrol build \
+    --verbose \
+    --require $lemmas \
+    --module-import $module \
+    $rekompile
+}
+
+kontrol_prove() {
+  notif "Kontrol Prove"
+  # shellcheck disable=SC2086
+  run kontrol prove \
+    --max-depth $max_depth \
+    --max-iterations $max_iterations \
+    --smt-timeout $smt_timeout \
+    --workers $workers \
+    $reinit \
+    $bug_report \
+    $break_on_calls \
+    $break_every_step \
+    $auto_abstract \
+    $tests \
+    $use_booster \
+    --init-node-from $state_diff \
+    --xml-test-report
+}
+
+# Define the function to run on failure
+on_failure() {
+  dump_log_results
+
+  if [ "$LOCAL" = false ]; then
+    clean_docker
+  fi
+
+  notif "Cleanup complete."
+  exit 1
 }
