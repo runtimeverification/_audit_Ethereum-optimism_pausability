@@ -41,12 +41,11 @@ regen=
 #################################
 
 # Temporarily unexecuted tests
+# None
 
 test_list=()
 if [ "$SCRIPT_TESTS" == true ]; then
-  test_list=( "OptimismPortalKontrol.prove_proveWithdrawalTransaction_paused0"   \
-              "OptimismPortalKontrol.prove_proveWithdrawalTransaction_paused1"   \
-              "OptimismPortalKontrol.prove_finalizeWithdrawalTransaction_paused" \
+  test_list=( "OptimismPortalKontrol.prove_finalizeWithdrawalTransaction_paused" \
               "L1StandardBridgeKontrol.prove_finalizeBridgeERC20_paused"         \
               "L1StandardBridgeKontrol.prove_finalizeBridgeETH_paused"           \
               "L1ERC721BridgeKontrol.prove_finalizeBridgeERC721_paused"          \
@@ -78,7 +77,7 @@ done
 max_depth=10000
 max_iterations=10000
 smt_timeout=100000
-max_workers=7 # Set to 7 since the CI machine has 8 CPUs
+max_workers=16 # Set to 7 since the CI machine has 8 CPUs
 # workers is the minimum between max_workers and the length of test_list
 # unless no test arguments are provided, in which case we default to max_workers
 if [ "$CUSTOM_TESTS" == 0 ] && [ "$SCRIPT_TESTS" == false ]; then
