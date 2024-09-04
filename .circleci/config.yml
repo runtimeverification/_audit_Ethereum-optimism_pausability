@@ -35,6 +35,9 @@ parameters:
   docker_publish_dispatch:
     type: boolean
     default: false
+  publish_contract_artifacts_dispatch:
+    type: boolean
+    default: false
 
 orbs:
   go: circleci/go@1.8.0
@@ -195,6 +198,10 @@ jobs:
           name: print forge version
           command: forge --version
       - run:
+          name: Pull artifacts
+          command: bash scripts/ops/pull-artifacts.sh
+          working_directory: packages/contracts-bedrock
+      - run:
           name: Build contracts
           environment:
             FOUNDRY_PROFILE: ci
@@ -207,17 +214,17 @@ jobs:
           name: Copy L2OO allocs to .devnet-l2oo
           command: cp -r .devnet/ .devnet-l2oo/
       - run:
-          name: Generate Plasma allocs
-          command: DEVNET_PLASMA="true" make devnet-allocs
+          name: Generate AltDA allocs
+          command: DEVNET_ALTDA="true" make devnet-allocs
       - run:
-          name: Copy Plasma allocs to .devnet-plasma
-          command: cp -r .devnet/ .devnet-plasma/
+          name: Copy AltDA allocs to .devnet-altda
+          command: cp -r .devnet/ .devnet-altda/
       - run:
-          name: Generate Generic Plasma allocs
-          command: DEVNET_PLASMA="true" GENERIC_PLASMA="true" make devnet-allocs
+          name: Generate Generic AltDA allocs
+          command: DEVNET_ALTDA="true" GENERIC_ALTDA="true" make devnet-allocs
       - run:
-          name: Copy Plasma allocs to .devnet-plasma
-          command: cp -r .devnet/ .devnet-plasma-generic/
+          name: Copy AltDA allocs to .devnet-altda
+          command: cp -r .devnet/ .devnet-altda-generic/
       - run:
           name: Generate default allocs
           command: make devnet-allocs
@@ -239,18 +246,18 @@ jobs:
             - ".devnet-l2oo/allocs-l2-ecotone.json"
             - ".devnet-l2oo/allocs-l2-fjord.json"
             - ".devnet-l2oo/allocs-l2-granite.json"
-            - ".devnet-plasma/allocs-l1.json"
-            - ".devnet-plasma/addresses.json"
-            - ".devnet-plasma/allocs-l2-delta.json"
-            - ".devnet-plasma/allocs-l2-ecotone.json"
-            - ".devnet-plasma/allocs-l2-fjord.json"
-            - ".devnet-plasma/allocs-l2-granite.json"
-            - ".devnet-plasma-generic/allocs-l1.json"
-            - ".devnet-plasma-generic/addresses.json"
-            - ".devnet-plasma-generic/allocs-l2-delta.json"
-            - ".devnet-plasma-generic/allocs-l2-ecotone.json"
-            - ".devnet-plasma-generic/allocs-l2-fjord.json"
-            - ".devnet-plasma-generic/allocs-l2-granite.json"
+            - ".devnet-altda/allocs-l1.json"
+            - ".devnet-altda/addresses.json"
+            - ".devnet-altda/allocs-l2-delta.json"
+            - ".devnet-altda/allocs-l2-ecotone.json"
+            - ".devnet-altda/allocs-l2-fjord.json"
+            - ".devnet-altda/allocs-l2-granite.json"
+            - ".devnet-altda-generic/allocs-l1.json"
+            - ".devnet-altda-generic/addresses.json"
+            - ".devnet-altda-generic/allocs-l2-delta.json"
+            - ".devnet-altda-generic/allocs-l2-ecotone.json"
+            - ".devnet-altda-generic/allocs-l2-fjord.json"
+            - ".devnet-altda-generic/allocs-l2-granite.json"
             - "packages/contracts-bedrock/deploy-config/devnetL1.json"
             - "packages/contracts-bedrock/deployments/devnetL1"
       - notify-failures-on-develop
@@ -609,6 +616,16 @@ jobs:
             just snapshots-check || echo "export SNAPSHOTS_STATUS=1" >> "$BASH_ENV"
           working_directory: packages/contracts-bedrock
       - run:
+          name: kontrol deployment
+          command: |
+            just kontrol-deployment-check || echo "export KONTROL_DEPLOYMENT_STATUS=1" >> "$BASH_ENV"
+          working_directory: packages/contracts-bedrock
+      - run:
+          name: interfaces
+          command: |
+            just interfaces-check-no-build || echo "export INTERFACES_STATUS=1" >> "$BASH_ENV"
+          working_directory: packages/contracts-bedrock
+      - run:
           name: size check
           command: |
             forge build --sizes --skip "/**/test/**" --skip "/**/scripts/**" || echo "export SIZE_CHECK=1" >> "$BASH_ENV"
@@ -644,6 +661,14 @@ jobs:
             fi
             if [[ "$SNAPSHOTS_STATUS" -ne 0 ]]; then
               echo "Snapshots check failed, see job output for details."
+              FAILED=1
+            fi
+            if [[ "$KONTROL_DEPLOYMENT_STATUS" -ne 0 ]]; then
+              echo "Kontrol deployment check failed, see job output for details."
+              FAILED=1
+            fi
+            if [[ "$INTERFACES_STATUS" -ne 0 ]]; then
+              echo "Interface check failed, see job output for details."
               FAILED=1
             fi
             if [[ "$SIZE_CHECK" -ne 0 ]]; then
@@ -838,11 +863,11 @@ jobs:
                 command: echo 'export OP_E2E_USE_L2OO=true' >> $BASH_ENV
       - when:
           condition:
-            equal: ['-plasma', <<parameters.variant>>]
+            equal: ['-altda', <<parameters.variant>>]
           steps:
             - run:
-                name: Set OP_E2E_USE_PLASMA = true
-                command: echo 'export OP_E2E_USE_PLASMA=true' >> $BASH_ENV
+                name: Set OP_E2E_USE_ALTDA = true
+                command: echo 'export OP_E2E_USE_ALTDA=true' >> $BASH_ENV
       - check-changed:
           patterns: op-(.+),cannon,contracts-bedrock
       - run:
@@ -1067,26 +1092,26 @@ jobs:
       DEVNET_NO_BUILD: 'true'
       # Default value; Can be overridden.
       DEVNET_L2OO: 'false'
-      DEVNET_PLASMA: 'false'
+      DEVNET_ALTDA: 'false'
     steps:
       - checkout
       - when:
           condition:
-            equal: ['plasma', <<parameters.variant>>]
+            equal: ['altda', <<parameters.variant>>]
           steps:
             - run:
-                name: Set DEVNET_PLASMA = true
-                command: echo 'export DEVNET_PLASMA=true' >> $BASH_ENV
+                name: Set DEVNET_ALTDA = true
+                command: echo 'export DEVNET_ALTDA=true' >> $BASH_ENV
       - when:
           condition:
-            equal: ['plasma-generic', <<parameters.variant>>]
+            equal: ['altda-generic', <<parameters.variant>>]
           steps:
             - run:
-                name: Set DEVNET_PLASMA = true
-                command: echo 'export DEVNET_PLASMA=true' >> $BASH_ENV
+                name: Set DEVNET_ALTDA = true
+                command: echo 'export DEVNET_ALTDA=true' >> $BASH_ENV
             - run:
-                name: Set GENERIC_PLASMA = true
-                command: echo 'export GENERIC_PLASMA=true' >> $BASH_ENV
+                name: Set GENERIC_ALTDA = true
+                command: echo 'export GENERIC_ALTDA=true' >> $BASH_ENV
       - check-changed:
           patterns: op-(.+),packages,ops-bedrock,bedrock-devnet
       - run:
@@ -1306,45 +1331,6 @@ jobs:
           paths:
             - "/go/pkg/mod"
 
-  op-service-rethdb-tests:
-    docker:
-      - image: <<pipeline.parameters.ci_builder_rust_image>>
-    steps:
-      - checkout
-      - check-changed:
-          patterns: op-service,op-node
-      - restore_cache:
-          name: Restore Go modules cache
-          key: gomod-{{ checksum "go.sum" }}
-      - run:
-          name: Cargo fmt + clippy
-          command: |
-            cargo +nightly fmt -- --check
-            cargo +nightly clippy --all --all-features -- -D warnings
-          working_directory: op-service/rethdb-reader
-      - run:
-          name: Generate testdata db
-          command: cargo test
-          working_directory: op-service/rethdb-reader
-      - run:
-          name: Build dylib
-          command: cargo build --release
-          working_directory: op-service/rethdb-reader
-      - run:
-          name: Update LD_LIBRARY_PATH
-          command: echo 'export LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:/root/project/op-service/rethdb-reader/target/release"' >> $BASH_ENV
-      - run:
-          name: Run op-service RethDB tests
-          command: |
-            gotestsum --format=standard-verbose --junitfile=/tmp/test-results/op-service.xml \
-            -- -parallel=8 -coverpkg=github.com/ethereum-optimism/optimism/... -coverprofile=coverage.out \
-            -run TestRethDB -tags rethdb -v
-          working_directory: op-service/sources
-      # TODO(CLI-148): Fix codecov
-      #- run:
-          #name: upload coverage
-          #command: codecov --verbose --clean --flags bedrock-rethdb-go-tests
-
   bedrock-go-tests:  # just a helper, that depends on all the actual test jobs
     docker:
       # Use a smaller base image to avoid pulling the huge ci-builder
@@ -1461,6 +1447,34 @@ jobs:
           working_directory: ./packages/contracts-bedrock
       - notify-failures-on-develop
 
+  publish-contract-artifacts:
+    docker:
+      - image: <<pipeline.parameters.ci_builder_image>>
+    resource_class: xlarge
+    steps:
+      - gcp-cli/install
+      - gcp-oidc-authenticate:
+          gcp_cred_config_file_path: /root/gcp_cred_config.json
+          oidc_token_file_path: /root/oidc_token.json
+          project_id: GCP_TOOLS_ARTIFACTS_PROJECT_ID
+          service_account_email: GCP_CONTRACTS_PUBLISHER_SERVICE_ACCOUNT_EMAIL
+      - checkout
+      - install-contracts-dependencies
+      - run:
+          name: Pull artifacts
+          command: bash scripts/ops/pull-artifacts.sh
+          working_directory: packages/contracts-bedrock
+      - run:
+          name: Build contracts
+          environment:
+            FOUNDRY_PROFILE: ci
+          command: just build
+          working_directory: packages/contracts-bedrock
+      - run:
+          name: Publish artifacts
+          command: bash scripts/ops/publish-artifacts.sh
+          working_directory: packages/contracts-bedrock
+
 workflows:
   main:
     when:
@@ -1518,10 +1532,6 @@ workflows:
           uses_artifacts: true
           requires: ["go-mod-download", "pnpm-monorepo"]
       - go-test:
-          name: op-heartbeat-tests
-          module: op-heartbeat
-          requires: [ "go-mod-download" ]
-      - go-test:
           name: op-batcher-tests
           module: op-batcher
           requires: ["go-mod-download"]
@@ -1576,7 +1586,7 @@ workflows:
           name: op-e2e-action-tests<< matrix.variant >>
           matrix:
             parameters:
-              variant: ["", "-l2oo", "-plasma"]
+              variant: ["", "-l2oo", "-altda"]
           module: op-e2e
           target: test-actions
           parallelism: 1
@@ -1591,9 +1601,6 @@ workflows:
           requires:
             - pnpm-monorepo
             - cannon-prestate
-      - op-service-rethdb-tests:
-          requires:
-            - go-mod-download
       - op-program-compat:
           requires:
             - op-program-tests
@@ -1607,7 +1614,6 @@ workflows:
             - go-mod-download
             - op-batcher-tests
             - op-chain-ops-tests
-            - op-heartbeat-tests
             - op-node-tests
             - op-proposer-tests
             - op-challenger-tests
@@ -1617,11 +1623,10 @@ workflows:
             - op-program-compat
             - op-service-tests
             - op-supervisor-tests
-            - op-service-rethdb-tests
             - op-e2e-HTTP-tests
             - op-e2e-fault-proof-tests
             - op-e2e-action-tests
-            - op-e2e-action-tests-plasma
+            - op-e2e-action-tests-altda
       - docker-build:
           name: op-node-docker-build
           docker_name: op-node
@@ -1658,11 +1663,6 @@ workflows:
           docker_tags: <<pipeline.git.revision>>,<<pipeline.git.branch>>
           # op-conductor is not part of the devnet, we don't save it.
       - docker-build:
-          name: op-heartbeat-docker-build
-          docker_name: op-heartbeat
-          docker_tags: <<pipeline.git.revision>>,<<pipeline.git.branch>>
-          # op-heartbeat is not part of the devnet, we don't save it.
-      - docker-build:
           name: da-server-docker-build
           docker_name: da-server
           docker_tags: <<pipeline.git.revision>>,<<pipeline.git.branch>>
@@ -1678,7 +1678,7 @@ workflows:
       - devnet:
           matrix:
             parameters:
-              variant: ["default", "plasma", "plasma-generic"]
+              variant: ["default", "altda", "altda-generic"]
           requires:
             - pnpm-monorepo
             - op-batcher-docker-build
@@ -1712,26 +1712,6 @@ workflows:
               only: /^(da-server|ci-builder(-rust)?|ufm-[a-z0-9\-]*|op-[a-z0-9\-]*)\/v.*/
             branches:
               ignore: /.*/
-      - docker-build:
-          name: op-heartbeat-release
-          filters:
-            tags:
-              only: /^op-heartbeat\/v.*/
-            branches:
-              ignore: /.*/
-          docker_name: op-heartbeat
-          docker_tags: <<pipeline.git.revision>>
-          requires: ['hold']
-          platforms: "linux/amd64,linux/arm64"
-          publish: true
-          release: true
-          context:
-            - oplabs-gcr-release
-      - check-cross-platform:
-          name: op-heartbeat-cross-platform
-          op_component: op-heartbeat
-          requires:
-            - op-heartbeat-release
       - docker-build:
           name: op-node-docker-release
           filters:
@@ -1958,6 +1938,14 @@ workflows:
             - slack
             - oplabs-fpp-nodes
 
+  develop-publish-contract-artifacts:
+    when:
+      or:
+        - equal: [ "develop", <<pipeline.git.branch>> ]
+        - equal: [ true, <<pipeline.parameters.publish_contract_artifacts_dispatch>> ]
+    jobs:
+      - publish-contract-artifacts
+
   develop-fault-proofs:
     when:
       and:
@@ -2107,20 +2095,6 @@ workflows:
           op_component: op-conductor
           requires:
             - op-conductor-docker-publish
-      - docker-build:
-          name: op-heartbeat-docker-publish
-          docker_name: op-heartbeat
-          docker_tags: <<pipeline.git.revision>>,<<pipeline.git.branch>>
-          platforms: "linux/amd64,linux/arm64"
-          publish: true
-          context:
-            - oplabs-gcr
-            - slack
-      - check-cross-platform:
-          name: op-heartbeat-cross-platform
-          op_component: op-heartbeat
-          requires:
-            - op-heartbeat-docker-publish
       - docker-build:
           name: op-supervisor-docker-publish
           docker_name: op-supervisor
