@@ -39,6 +39,10 @@ Lemmas on arithmetic reasoning. Specifically, on: cancellativity, inequalities i
     rule X  <Int A +Int B => true requires X <Int 0 andBool 0 <=Int A andBool 0 <=Int B [concrete(X), simplification]
     rule X <=Int A +Int B => true requires X <Int 0 andBool 0 <=Int A andBool 0 <=Int B [concrete(X), simplification]
 
+    // TOFIX: simplification until backend substitutions become more expressive
+    rule X -Int Y => X -Int 600 requires Y ==Int 600
+      [simplification, concrete(X)]
+
     // Upper bound on (pow256 - 32) &Int lengthBytes(X)
     rule notMaxUInt5 &Int Y <=Int Y => true
       requires 0 <=Int Y
