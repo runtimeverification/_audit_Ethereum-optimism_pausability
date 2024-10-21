@@ -174,46 +174,46 @@ Following the compiler constraints, we enforce a limit on the length of byte arr
 The summary lemma is as follows, with commentary inlined:
 
 ```k
-    rule [copy-memory-to-memory-summary]:
-      <k> #execute ... </k>
-      <useGas> false </useGas>
-      <schedule> SHANGHAI </schedule>
-      <jumpDests> JUMPDESTS </jumpDests>
-      // The program and program counter are symbolic, focusing on the part we will be executing (CP)
-      <program> PROGRAM </program>
-      <pc> PCOUNT => PCOUNT +Int 53 </pc>
-      // The word stack has the appropriate form, as per the compiled code
-      <wordStack> LENGTH : _ : SRC : DEST : WS </wordStack>
-      // The program copies LENGTH bytes of memory from SRC +Int 32 to DEST +Int OFFSET,
-      // padded with 32 zeros in case LENGTH is not divisible by 32
-      <localMem>
-        LM => LM [ DEST +Int 32 := #range ( LM, SRC +Int 32, LENGTH ) +Bytes
-                                   #buf ( ( ( notMaxUInt5 &Int ( LENGTH +Int maxUInt5 ) ) -Int LENGTH ) , 0 ) +Bytes
-                                   #buf ( ( ( ( 32 -Int ( ( notMaxUInt5 &Int ( LENGTH +Int maxUInt5 ) ) -Int LENGTH ) ) ) modInt 32 ), 0 ) ]
-      </localMem>
-      requires
-       // The current program we are executing differs from the original one only in the hardcoded jump addresses,
-       // which are now relative to PCOUNT, and the hardcoded offset, which is now symbolic.
-               #range(PROGRAM, PCOUNT, 53) ==K b"`\x00[\x81\x81\x10\x15b\x00\x81`W` \x81\x85\x01\x81\x01Q\x86\x83\x01\x82\x01R\x01b\x00\x81BV[\x81\x81\x11\x15b\x00\x81sW`\x00` \x83\x87\x01\x01R[P"
-                                               [ 08 := #buf(3, PCOUNT +Int 32) ]
-                                               [ 28 := #buf(3, PCOUNT +Int  2) ]
-                                               [ 38 := #buf(3, PCOUNT +Int 51) ]
-
-       // Various well-formedness constraints. In particular, the maxBytesLength-related ones are present to
-       // remove various chops that would otherwise creep into the execution, and are reasonable since byte
-       // arrays in actual programs would never reach that size.
-       andBool 0 <=Int PCOUNT
-       andBool 0 <=Int LENGTH andBool LENGTH <Int maxBytesLength
-       andBool 0 <=Int SRC    andBool SRC    <Int maxBytesLength
-       andBool 0 <=Int DEST   andBool DEST   <Int maxBytesLength
-       andBool #sizeWordStack(WS) <=Int 1015
-       andBool SRC +Int LENGTH <=Int DEST // No overlap between source and destination
-       andBool DEST <=Int lengthBytes(LM) // Destination starts within current memory
-       andBool PCOUNT +Int 51 <Int lengthBytes(JUMPDESTS) // We are not looking outside of the JUMPDESTs bytearray
-       // All JUMPDESTs in the program are valid
-       andBool JUMPDESTS[PCOUNT +Int 2] ==Int 1 andBool JUMPDESTS[PCOUNT +Int 32] ==Int 1 andBool JUMPDESTS[PCOUNT +Int 51] ==Int 1
-       andBool PCOUNT +Int 51 <Int 2 ^Int 24  // and fit into three bytes
-      [priority(30), concrete(JUMPDESTS, PROGRAM, PCOUNT), preserves-definedness]
+//   rule [copy-memory-to-memory-summary]:
+//     <k> #execute ... </k>
+//     <useGas> false </useGas>
+//     <schedule> SHANGHAI </schedule>
+//     <jumpDests> JUMPDESTS </jumpDests>
+//     // The program and program counter are symbolic, focusing on the part we will be executing (CP)
+//     <program> PROGRAM </program>
+//     <pc> PCOUNT => PCOUNT +Int 53 </pc>
+//     // The word stack has the appropriate form, as per the compiled code
+//     <wordStack> LENGTH : _ : SRC : DEST : WS </wordStack>
+//     // The program copies LENGTH bytes of memory from SRC +Int 32 to DEST +Int OFFSET,
+//     // padded with 32 zeros in case LENGTH is not divisible by 32
+//     <localMem>
+//       LM => LM [ DEST +Int 32 := #range ( LM, SRC +Int 32, LENGTH ) +Bytes
+//                                  #buf ( ( ( notMaxUInt5 &Int ( LENGTH +Int maxUInt5 ) ) -Int LENGTH ) , 0 ) +Bytes
+//                                  #buf ( ( ( ( 32 -Int ( ( notMaxUInt5 &Int ( LENGTH +Int maxUInt5 ) ) -Int LENGTH ) ) ) modInt 32 ), 0 ) ]
+//     </localMem>
+//     requires
+//      // The current program we are executing differs from the original one only in the hardcoded jump addresses,
+//      // which are now relative to PCOUNT, and the hardcoded offset, which is now symbolic.
+//              #range(PROGRAM, PCOUNT, 53) ==K b"`\x00[\x81\x81\x10\x15b\x00\x81`W` \x81\x85\x01\x81\x01Q\x86\x83\x01\x82\x01R\x01b\x00\x81BV[\x81\x81\x11\x15b\x00\x81sW`\x00` \x83\x87\x01\x01R[P"
+//                                              [ 08 := #buf(3, PCOUNT +Int 32) ]
+//                                              [ 28 := #buf(3, PCOUNT +Int  2) ]
+//                                              [ 38 := #buf(3, PCOUNT +Int 51) ]
+//
+//      // Various well-formedness constraints. In particular, the maxBytesLength-related ones are present to
+//      // remove various chops that would otherwise creep into the execution, and are reasonable since byte
+//      // arrays in actual programs would never reach that size.
+//      andBool 0 <=Int PCOUNT
+//      andBool 0 <=Int LENGTH andBool LENGTH <Int maxBytesLength
+//      andBool 0 <=Int SRC    andBool SRC    <Int maxBytesLength
+//      andBool 0 <=Int DEST   andBool DEST   <Int maxBytesLength
+//      andBool #sizeWordStack(WS) <=Int 1015
+//      andBool SRC +Int LENGTH <=Int DEST // No overlap between source and destination
+//      andBool DEST <=Int lengthBytes(LM) // Destination starts within current memory
+//      andBool PCOUNT +Int 51 <Int lengthBytes(JUMPDESTS) // We are not looking outside of the JUMPDESTs bytearray
+//      // All JUMPDESTs in the program are valid
+//      andBool JUMPDESTS[PCOUNT +Int 2] ==Int 1 andBool JUMPDESTS[PCOUNT +Int 32] ==Int 1 andBool JUMPDESTS[PCOUNT +Int 51] ==Int 1
+//      andBool PCOUNT +Int 51 <Int 2 ^Int 24  // and fit into three bytes
+//     [priority(30), concrete(JUMPDESTS, PROGRAM, PCOUNT), preserves-definedness]
 
 endmodule
 ```
