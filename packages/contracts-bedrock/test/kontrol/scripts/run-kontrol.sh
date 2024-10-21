@@ -40,13 +40,14 @@ kontrol_prove() {
     --init-node-from-diff $state_diff \
     --kore-rpc-command 'kore-rpc-booster --no-post-exec-simplify --equation-max-recursion 100 --equation-max-iterations 1000' \
     --xml-test-report \
-    --maintenance-rate 16 \
+    --maintenance-rate 1 \
     --assume-defined \
     --no-log-rewrites \
     --smt-timeout 16000 \
     --smt-retry-limit 0 \
     --no-stack-checks \
-    --schedule CANCUN
+    --schedule CANCUN \
+    --verbose
   return $?
 }
 
