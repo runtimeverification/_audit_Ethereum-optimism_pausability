@@ -1,0 +1,53 @@
+[build.default]
+foundry-project-root       = '.'
+regen                      = true
+rekompile                  = true
+verbose                    = false
+debug                      = false
+require                    = 'test/kontrol/pausability-lemmas.md'
+module-import              = 'OptimismPortalKontrol:PAUSABILITY'
+no-metadata                = true
+# auxiliary-lemmas         = true
+# o2                       = true
+
+[prove.default]
+foundry-project-root       = '.'
+verbose                    = false
+debug                      = false
+max-depth                  = 10000
+max-iterations             = 10000
+reinit                     = false
+cse                        = false
+workers                    = 16
+maintenance-rate           = 16
+assume-defined             = true
+no-log-rewrites            = true
+no-stack-checks            = true
+kore-rpc-command           = 'kore-rpc-booster --no-post-exec-simplify --equation-max-recursion 100 --equation-max-iterations 1000'
+failure-information        = true
+counterexample-information = true
+minimize-proofs            = false
+fail-fast                  = true
+smt-timeout                = 16000
+smt-retry-limit            = 0
+break-every-step           = false
+break-on-jumpi             = false
+break-on-calls             = false
+break-on-storage           = false
+break-on-basic-blocks      = false
+break-on-cheatcodes        = false
+run-constructor            = false
+symbolic-immutables        = false
+init-node-from-diff        = './snapshots/state-diff/Kontrol-31337.json'
+xml-test-report            = true
+# max-frontier-parallel    = 6
+
+[show.default]
+foundry-project-root       = '.'
+verbose                    = false
+debug                      = false
+use-hex-encoding           = false
+
+[view-kcfg.default]
+foundry-project-root       = '.'
+use-hex-encoding           = true
