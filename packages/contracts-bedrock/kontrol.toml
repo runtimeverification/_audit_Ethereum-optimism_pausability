@@ -5,7 +5,7 @@ rekompile                  = true
 verbose                    = false
 debug                      = false
 require                    = 'test/kontrol/pausability-lemmas.md'
-module-import              = 'OptimismPortalKontrol:PAUSABILITY'
+module-import              = 'OptimismPortalKontrol:PAUSABILITY-LEMMAS'
 no-metadata                = true
 # auxiliary-lemmas         = true
 # o2                       = true
@@ -40,6 +40,22 @@ run-constructor            = false
 symbolic-immutables        = false
 init-node-from-diff        = './snapshots/state-diff/Kontrol-31337.json'
 xml-test-report            = true
+match-test                 = ['OptimismPortal2Kontrol.prove_proveWithdrawalTransaction_paused0',
+                              'OptimismPortal2Kontrol.prove_proveWithdrawalTransaction_paused1(',
+                              'OptimismPortal2Kontrol.prove_proveWithdrawalTransaction_paused2',
+                              'OptimismPortal2Kontrol.prove_proveWithdrawalTransaction_paused3',
+                              'OptimismPortal2Kontrol.prove_proveWithdrawalTransaction_paused4',
+                              'OptimismPortal2Kontrol.prove_proveWithdrawalTransaction_paused5',
+                              'OptimismPortal2Kontrol.prove_proveWithdrawalTransaction_paused6',
+                              'OptimismPortal2Kontrol.prove_proveWithdrawalTransaction_paused7',
+                              'OptimismPortal2Kontrol.prove_proveWithdrawalTransaction_paused8',
+                              'OptimismPortal2Kontrol.prove_proveWithdrawalTransaction_paused9',
+                              'OptimismPortal2Kontrol.prove_proveWithdrawalTransaction_paused10',
+                              'OptimismPortal2Kontrol.prove_finalizeWithdrawalTransaction_paused',
+                              'L1StandardBridgeKontrol.prove_finalizeBridgeERC20_paused',
+                              'L1StandardBridgeKontrol.prove_finalizeBridgeETH_paused',
+                              'L1ERC721BridgeKontrol.prove_finalizeBridgeERC721_paused',
+                              'L1CrossDomainMessengerKontrol.prove_relayMessage_paused']
 # max-frontier-parallel    = 6
 
 [show.default]
