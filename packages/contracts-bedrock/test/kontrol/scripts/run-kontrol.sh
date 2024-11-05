@@ -1,7 +1,7 @@
 #!/bin/bash
 set -euo pipefail
 
-export FOUNDRY_PROFILE=kprove
+export FOUNDRY_PROFILE=kontrol-properties
 
 SCRIPT_HOME="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 # shellcheck source=/dev/null

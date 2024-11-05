@@ -94,7 +94,7 @@ optimizer = false
 ################################################################
 # See test/kontrol/README.md for an explanation of how the profiles are configured
 
-[profile.kprove]
+[profile.kontrol-properties]
 src = 'test/kontrol/proofs'
 out = 'kout-proofs'
 test = 'test/kontrol/proofs'
