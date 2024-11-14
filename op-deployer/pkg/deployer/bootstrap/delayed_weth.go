@@ -159,11 +159,11 @@ func DelayedWETH(ctx context.Context, cfg DelayedWETHConfig) error {
 		lgr,
 		chainDeployer,
 		artifactsFS,
-		nonce,
 	)
 	if err != nil {
 		return fmt.Errorf("failed to create script host: %w", err)
 	}
+	host.SetNonce(chainDeployer, nonce)
 
 	var release string
 	if cfg.ArtifactsLocator.IsTag() {
@@ -188,7 +188,7 @@ func DelayedWETH(ctx context.Context, cfg DelayedWETHConfig) error {
 		},
 	)
 	if err != nil {
-		return fmt.Errorf("error deploying implementations: %w", err)
+		return fmt.Errorf("error deploying DelayedWETH: %w", err)
 	}
 
 	if _, err := bcaster.Broadcast(ctx); err != nil {
