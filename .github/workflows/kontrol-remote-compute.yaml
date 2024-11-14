@@ -1,0 +1,39 @@
+---
+  name: 'Proof Runner'
+  on:
+    workflow_dispatch:
+      inputs:
+        branch_name:
+          description: 'Branch Name of Specific Code to Test'
+          required: true
+    # pull_request:
+    #   branches:
+    #     - main
+
+  # Stop in progress workflows on the same branch and same workflow to use latest committed code
+  concurrency:
+    group: ${{ github.workflow }}-${{ github.ref }}-${{ github.event.inputs.branch_name }}
+    cancel-in-progress: false
+
+  jobs:
+    test-proofs:
+      name: 'Test Proofs'
+      runs-on: [self-hosted, linux, kaas]
+      environment: "runtimeverification/proof-runner"
+      steps:
+        - name: 'Check out code'
+          uses: actions/checkout@v4
+          with:
+            fetch-depth: 0
+
+        - name: "Install KaaS"
+          uses: runtimeverification/install-kaas@v0.2.1
+          with:
+            github-token: ${{ secrets.GITHUB_TOKEN }}
+
+        - name: 'Run Kontrol'
+          shell: bash
+          run: |
+            export FOUNDRY_PROFILE=kontrol-properties
+            BRANCH_NAME=${{ github.event.inputs.branch_name || github.ref_name }}
+            kaas-cli run -m remote --watch -t ${{ secrets.KAAS_TOKEN }} --branch "$BRANCH_NAME" -vs runtimeverification/_audits_Ethereum-optimism_pausability
