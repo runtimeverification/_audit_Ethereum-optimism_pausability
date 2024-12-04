@@ -7,6 +7,8 @@ import (
 	"math/big"
 	"strings"
 
+	"github.com/ethereum-optimism/optimism/op-chain-ops/script"
+	"github.com/ethereum-optimism/optimism/op-chain-ops/script/forking"
 	artifacts2 "github.com/ethereum-optimism/optimism/op-deployer/pkg/deployer/artifacts"
 
 	"github.com/ethereum-optimism/optimism/op-deployer/pkg/env"
@@ -26,6 +28,7 @@ import (
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/ethereum/go-ethereum/log"
+	"github.com/ethereum/go-ethereum/rpc"
 	"github.com/urfave/cli/v2"
 )
 
@@ -69,22 +72,31 @@ func DelayedWETHCLI(cliCtx *cli.Context) error {
 	l := oplog.NewLogger(oplog.AppOut(cliCtx), logCfg)
 	oplog.SetGlobalLogHandler(l.Handler())
 
+	config, err := NewDelayedWETHConfigFromClI(cliCtx, l)
+	if err != nil {
+		return err
+	}
+
+	ctx := ctxinterrupt.WithCancelOnInterrupt(cliCtx.Context)
+
+	return DelayedWETH(ctx, config)
+}
+
+func NewDelayedWETHConfigFromClI(cliCtx *cli.Context, l log.Logger) (DelayedWETHConfig, error) {
 	l1RPCUrl := cliCtx.String(deployer.L1RPCURLFlagName)
 	privateKey := cliCtx.String(deployer.PrivateKeyFlagName)
 	artifactsURLStr := cliCtx.String(ArtifactsLocatorFlagName)
 	artifactsLocator := new(artifacts2.Locator)
 	if err := artifactsLocator.UnmarshalText([]byte(artifactsURLStr)); err != nil {
-		return fmt.Errorf("failed to parse artifacts URL: %w", err)
+		return DelayedWETHConfig{}, fmt.Errorf("failed to parse artifacts URL: %w", err)
 	}
-
-	ctx := ctxinterrupt.WithCancelOnInterrupt(cliCtx.Context)
-
-	return DelayedWETH(ctx, DelayedWETHConfig{
+	config := DelayedWETHConfig{
 		L1RPCUrl:         l1RPCUrl,
 		PrivateKey:       privateKey,
 		Logger:           l,
 		ArtifactsLocator: artifactsLocator,
-	})
+	}
+	return config, nil
 }
 
 func DelayedWETH(ctx context.Context, cfg DelayedWETHConfig) error {
@@ -149,9 +161,9 @@ func DelayedWETH(ctx context.Context, cfg DelayedWETHConfig) error {
 		return fmt.Errorf("failed to create broadcaster: %w", err)
 	}
 
-	nonce, err := l1Client.NonceAt(ctx, chainDeployer, nil)
+	l1RPC, err := rpc.Dial(cfg.L1RPCUrl)
 	if err != nil {
-		return fmt.Errorf("failed to get starting nonce: %w", err)
+		return fmt.Errorf("failed to connect to L1 RPC: %w", err)
 	}
 
 	host, err := env.DefaultScriptHost(
@@ -159,11 +171,29 @@ func DelayedWETH(ctx context.Context, cfg DelayedWETHConfig) error {
 		lgr,
 		chainDeployer,
 		artifactsFS,
+		script.WithForkHook(func(cfg *script.ForkConfig) (forking.ForkSource, error) {
+			src, err := forking.RPCSourceByNumber(cfg.URLOrAlias, l1RPC, *cfg.BlockNumber)
+			if err != nil {
+				return nil, fmt.Errorf("failed to create RPC fork source: %w", err)
+			}
+			return forking.Cache(src), nil
+		}),
 	)
 	if err != nil {
 		return fmt.Errorf("failed to create script host: %w", err)
 	}
-	host.SetNonce(chainDeployer, nonce)
+
+	latest, err := l1Client.HeaderByNumber(ctx, nil)
+	if err != nil {
+		return fmt.Errorf("failed to get latest block: %w", err)
+	}
+
+	if _, err := host.CreateSelectFork(
+		script.ForkWithURLOrAlias("main"),
+		script.ForkWithBlockNumberU256(latest.Number),
+	); err != nil {
+		return fmt.Errorf("failed to select fork: %w", err)
+	}
 
 	var release string
 	if cfg.ArtifactsLocator.IsTag() {

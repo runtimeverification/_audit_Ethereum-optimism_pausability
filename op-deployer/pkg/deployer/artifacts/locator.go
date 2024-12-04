@@ -24,6 +24,22 @@ var DefaultL2ContractsLocator = &Locator{
 	Tag: standard.DefaultL2ContractsTag,
 }
 
+func NewLocatorFromTag(tag string) (*Locator, error) {
+	loc := new(Locator)
+	if err := loc.UnmarshalText([]byte("tag://" + tag)); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal tag: %w", err)
+	}
+	return loc, nil
+}
+
+func MustNewLocatorFromTag(tag string) *Locator {
+	loc, err := NewLocatorFromTag(tag)
+	if err != nil {
+		panic(err)
+	}
+	return loc
+}
+
 type Locator struct {
 	URL *url.URL
 	Tag string
@@ -54,11 +70,7 @@ func (a *Locator) MarshalText() ([]byte, error) {
 		return []byte(a.URL.String()), nil
 	}
 
-	if a.Tag != "" {
-		return []byte("tag://" + a.Tag), nil
-	}
-
-	return nil, fmt.Errorf("no URL, path or tag set")
+	return []byte("tag://" + a.Tag), nil
 }
 
 func (a *Locator) IsTag() bool {
