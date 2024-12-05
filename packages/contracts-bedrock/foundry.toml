@@ -116,7 +116,7 @@ optimizer = false
 #                         PROFILE: KONTROL                     #
 ################################################################
 
-[profile.kprove]
+[profile.kontrol-properties]
 src = 'test/kontrol/proofs'
 out = 'kout-proofs'
 test = 'test/kontrol/proofs'

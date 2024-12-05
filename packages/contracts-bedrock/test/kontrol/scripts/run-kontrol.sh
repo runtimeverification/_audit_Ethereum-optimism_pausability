@@ -1,7 +1,7 @@
 #!/bin/bash
 set -euo pipefail
 
-export FOUNDRY_PROFILE=kprove
+export FOUNDRY_PROFILE=kontrol-properties
 
 SCRIPT_HOME="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 # shellcheck source=/dev/null
@@ -15,12 +15,7 @@ parse_args "$@"
 kontrol_build() {
   notif "Kontrol Build"
   # shellcheck disable=SC2086
-  run kontrol build \
-    --require $lemmas \
-    --module-import $module \
-    --no-metadata \
-    ${rekompile} \
-    ${regen}
+  run kontrol build
   return $?
 }
 
@@ -28,24 +23,8 @@ kontrol_prove() {
   notif "Kontrol Prove"
   # shellcheck disable=SC2086
   run kontrol prove \
-    --max-depth $max_depth \
-    --max-iterations $max_iterations \
-    --smt-timeout $smt_timeout \
     --workers $workers \
-    $reinit \
-    $bug_report \
-    $break_on_calls \
-    $break_every_step \
-    $tests \
-    --init-node-from-diff $state_diff \
-    --kore-rpc-command 'kore-rpc-booster --no-post-exec-simplify --equation-max-recursion 100 --equation-max-iterations 1000' \
-    --xml-test-report \
-    --maintenance-rate 16 \
-    --assume-defined \
-    --no-log-rewrites \
-    --smt-timeout 16000 \
-    --smt-retry-limit 0 \
-    --no-stack-checks
+    $tests
   return $?
 }
 
@@ -103,21 +82,6 @@ on_failure() {
   exit 1
 }
 
-#########################
-# kontrol build options #
-#########################
-# NOTE: This script has a recurring pattern of setting and unsetting variables,
-# such as `rekompile`. Such a pattern is intended for easy use while locally
-# developing and executing the proofs via this script. Comment/uncomment the
-# empty assignment to activate/deactivate the corresponding flag
-lemmas=test/kontrol/pausability-lemmas.md
-base_module=PAUSABILITY-LEMMAS
-module=OptimismPortalKontrol:$base_module
-rekompile=--rekompile
-# rekompile=
-regen=--regen
-# regen=
-
 #################################
 # Tests to symbolically execute #
 #################################
@@ -165,9 +129,6 @@ done
 #########################
 # kontrol prove options #
 #########################
-max_depth=10000
-max_iterations=10000
-smt_timeout=100000
 max_workers=16 # Set to 16 since there are 16 proofs to run
 # workers is the minimum between max_workers and the length of test_list unless
 # no test arguments are provided, in which case we default to max_workers
@@ -176,15 +137,6 @@ if [ "$CUSTOM_TESTS" == 0 ] && [ "$SCRIPT_TESTS" == false ]; then
 else
   workers=$((${#test_list[@]}>max_workers ? max_workers : ${#test_list[@]}))
 fi
-reinit=--reinit
-reinit=
-break_on_calls=--break-on-calls
-break_on_calls=
-break_every_step=--break-every-step
-break_every_step=
-bug_report=--bug-report
-bug_report=
-state_diff="./snapshots/state-diff/Kontrol-31337.json"
 
 #############
 # RUN TESTS #

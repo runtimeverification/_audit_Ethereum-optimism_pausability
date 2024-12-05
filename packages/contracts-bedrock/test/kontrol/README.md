@@ -116,7 +116,7 @@ Once new deployment steps have been added to `runKontrolDeployment` the state-di
 
 #### Write the proof
 
-Write your proof in a `.k.sol` file in the [`proofs`](./proofs/) folder, which is the `test` directory used by the `kprove` profile to run the proofs (see [Deployment Summary Process](#deployment-summary-process)). The name of the new proofs should start with `prove` (or `check`) instead of `test` to avoid `forge test` running them. The reason for this is that if Kontrol cheatcodes (see [Kontrol's own cheatcodes](https://github.com/runtimeverification/kontrol-cheatcodes/blob/master/src/KontrolCheats.sol)) are used in a test, it will not be runnable by `forge`. Currently, none of the tests are using custom Kontrol cheatcodes, but this is something to bear in mind.
+Write your proof in a `.k.sol` file in the [`proofs`](./proofs/) folder, which is the `test` directory used by the `kontrol-properties` profile to run the proofs (see [Deployment Summary Process](#deployment-summary-process)). The name of the new proofs should start with `prove` (or `check`) instead of `test` to avoid `forge test` running them. The reason for this is that if Kontrol cheatcodes (see [Kontrol's own cheatcodes](https://github.com/runtimeverification/kontrol-cheatcodes/blob/master/src/KontrolCheats.sol)) are used in a test, it will not be runnable by `forge`. Currently, none of the tests are using custom Kontrol cheatcodes, but this is something to bear in mind.
 
 To reference the correct addresses for writing the tests, first import the signatures as in this example:
 
@@ -163,12 +163,12 @@ This provides a significant reduction in proof execution time, as it avoids the 
 All code executed in Kontrol—even when execution is concrete and not symbolic—is significantly slower than in Foundry, due to the mathematical representation of the EVM in Kontrol.
 Therefore we want to minimize the amount of code executed in Kontrol, and the fast summarization feature allows us to reduce `setUp` execution time.
 
-This project uses two different [`foundry.toml` profiles](../../foundry.toml), `kdeploy` and `kprove`, to facilitate usage of this fast summarization feature.:
+This project uses two different [`foundry.toml` profiles](../../foundry.toml), `kdeploy` and `kontrol-properties`, to facilitate usage of this fast summarization feature.:
 
 - `kdeploy`: Used by [`make-summary-deployment.sh`](./scripts/make-summary-deployment.sh) to generate the [`DeploymentSummary.sol`](./proofs/utils/DeploymentSummary.sol) contract based on execution of the [`KontrolDeployment.sol`](./deployment/KontrolDeployment.sol) contract using Foundry's state diff recording cheatcodes.
   This is where all necessary [`src/L1`](../../src/L1) files are compiled with their bytecode saved into the [`DeploymentSummaryCode.sol`](./proofs/utils/DeploymentSummaryCode.sol) file, which is inherited by `DeploymentSummary`.
 
-- `kprove`: Used by the [`run-kontrol.sh`](./scripts/run-kontrol.sh) script to execute proofs, which can be run once a `DeploymentSummary.sol` contract is present. This profile's `src` and `script` paths point to a test folder because we only want to compile what is in the `test/kontrol/proofs` folder, since that folder contains all bytecode and proofs.
+- `kontrol-properties`: Used by the [`run-kontrol.sh`](./scripts/run-kontrol.sh) script to execute proofs, which can be run once a `DeploymentSummary.sol` contract is present. This profile's `src` and `script` paths point to a test folder because we only want to compile what is in the `test/kontrol/proofs` folder, since that folder contains all bytecode and proofs.
 
 The `make-summary-deployment.sh` scripts saves off the generated JSON state diff to `snapshots/state-diff/Kontrol-Deploy.json`, and is run as part of the `snapshots` script in `package.json`.
 Therefore, the snapshots CI check will fail if the committed Kontrol state diff is out of sync.
