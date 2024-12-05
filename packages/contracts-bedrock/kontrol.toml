@@ -1,4 +1,4 @@
-[build.default]
+[build.kontrol-properties]
 foundry-project-root       = '.'
 regen                      = true
 rekompile                  = true
@@ -10,7 +10,7 @@ no-metadata                = true
 # auxiliary-lemmas         = true
 # o2                       = true
 
-[prove.default]
+[prove.kontrol-properties]
 foundry-project-root       = '.'
 verbose                    = false
 debug                      = false
